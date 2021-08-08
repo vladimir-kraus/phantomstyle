@@ -173,6 +173,24 @@ static const bool ItemView_UseFontHeightForDecorationSize = true;
 // per-widget style hint associated with it.
 static const bool TabBar_InactiveTabsHaveSpecular = false;
 
+qreal pushButtonRounding()
+{
+    QVariant val = qApp->property("PhantomStyle::Button_Rounding");
+    return val.isValid() ? val.toReal() : PushButton_Rounding;
+}
+
+qreal toolButtonRounding()
+{
+    QVariant val = qApp->property("PhantomStyle::Button_Rounding");
+    return val.isValid() ? val.toReal() : ToolButton_Rounding;
+}
+
+bool buttonGradient()
+{
+    QVariant val = qApp->property("PhantomStyle::Button_Gradient");
+    return val.isValid() ? val.toBool() : false;
+}
+
 struct Grad {
   Grad(const QColor& from, const QColor& to) {
     rgbA = Rgb::ofQColor(from);
@@ -568,6 +586,24 @@ Q_NEVER_INLINE PhSwatchPtr getCachedSwatchOfQPalette(
   }
   *headSwatchFastKey = ck;
   return deep_getCachedSwatchOfQPalette(cache, cacheCount, qpalette);
+}
+
+QBrush buttonBrush(const PhSwatch& swatch, Swatchy fill)
+{
+    if (fill && buttonGradient())
+    {
+        // TODO: cache?
+        QLinearGradient gradient({0.0, 0.0}, {0.0, 1.0});
+        gradient.setCoordinateMode(QGradient::ObjectMode);
+        QColor fillColor = swatch.color(fill);
+        gradient.setColorAt(0.0, fillColor.lighter(105));
+        gradient.setColorAt(1.0, fillColor.lighter(95));
+        return QBrush(gradient);
+    }
+    else
+    {
+        return swatch.brush(fill);
+    }
 }
 
 } // namespace
@@ -1301,7 +1337,7 @@ Q_NEVER_INLINE void paintBorderedRoundRect(QPainter* p, QRect rect,
     if (!aa)
       p->setRenderHint(QPainter::Antialiasing);
     p->setPen(swatch.pen(stroke));
-    p->setBrush(swatch.brush(fill));
+    p->setBrush(buttonBrush(swatch, fill));
     QRectF rf((qreal)rect.x() + 0.5, (qreal)rect.y() + 0.5,
               (qreal)rect.width() - 1.0, (qreal)rect.height() - 1.0);
     p->drawRoundedRect(rf, radius, radius);
@@ -1312,7 +1348,7 @@ Q_NEVER_INLINE void paintBorderedRoundRect(QPainter* p, QRect rect,
       fillRectOutline(p, rect, 1, swatch.color(stroke));
     }
     if (fill) {
-      p->fillRect(rect.adjusted(1, 1, -1, -1), swatch.color(fill));
+      p->fillRect(rect.adjusted(1, 1, -1, -1), buttonBrush(swatch, fill));
     }
   }
 }
@@ -1682,7 +1718,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     bool isOn = option->state & State_On;
     bool hasFocus = (option->state & State_HasFocus &&
                      option->state & State_KeyboardFocusChange);
-    const qreal rounding = Ph::ToolButton_Rounding;
+    const qreal rounding = Ph::toolButtonRounding();
     Swatchy outline = S_window_outline;
     Swatchy fill = S_button;
     Swatchy specular = S_button_specular;
@@ -1986,7 +2022,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     Q_UNUSED(isEnabled);
     bool hasFocus = (option->state & State_HasFocus &&
                      option->state & State_KeyboardFocusChange);
-    const qreal rounding = Ph::PushButton_Rounding;
+    const qreal rounding = Ph::pushButtonRounding();
     Swatchy outline = S_window_outline;
     Swatchy fill = S_button;
     Swatchy specular = S_button_specular;
@@ -2034,7 +2070,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     // temp code
     Ph::PSave save(painter);
     if (bg) {
-      Ph::paintSolidRoundRect(painter, option->rect, Ph::PushButton_Rounding,
+      Ph::paintSolidRoundRect(painter, option->rect, Ph::pushButtonRounding(),
                               swatch, bg);
     }
     QPen pen = swatch.pen(fg);
