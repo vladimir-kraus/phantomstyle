@@ -2023,22 +2023,25 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     bool hasFocus = (option->state & State_HasFocus &&
                      option->state & State_KeyboardFocusChange);
     const qreal rounding = Ph::pushButtonRounding();
+    bool highlight = hasFocus || isDefault || isOn;
     Swatchy outline = S_window_outline;
-    Swatchy fill = S_button;
+    Swatchy fill = highlight ? S_button : S_window;
     Swatchy specular = S_button_specular;
     if (isDown) {
       fill = S_button_pressed;
       specular = S_button_pressed_specular;
-    } else if (isOn) {
-      // kinda repurposing this, hmm
-      fill = S_scrollbarGutter;
-      specular = S_button_pressed_specular;
-    }
-    if (hasFocus || isDefault) {
-      outline = S_highlight_outline;
     }
     QRect r = option->rect;
     Ph::PSave save(painter);
+    bool lightTheme = option->palette.color(QPalette::Highlight).lightness() < option->palette.color(QPalette::Button).lightness();
+    if (highlight) {
+      if (lightTheme) {
+        outline = S_highlight_outline;
+      }
+      else {
+        specular = S_highlight_outline;
+      }
+    }
     Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill);
     Ph::paintBorderedRoundRect(painter, r.adjusted(1, 1, -1, -1), rounding,
                                swatch, specular, S_none);
