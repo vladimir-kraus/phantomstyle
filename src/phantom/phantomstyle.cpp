@@ -113,7 +113,7 @@ enum {
 
 static const qreal TabBarTab_Rounding = 0.0;
 static const qreal SpinBox_Rounding = 0.0;
-static const qreal LineEdit_Rounding = 0.0;
+static const qreal LineEdit_Rounding = 2.0;
 static const qreal FrameFocusRect_Rounding = 1.0;
 static const qreal PushButton_Rounding = 2.0;
 static const qreal ToolButton_Rounding = 1.25;
@@ -172,6 +172,12 @@ static const bool ItemView_UseFontHeightForDecorationSize = true;
 // of some dynamic config system for Phantom in the future, or have a
 // per-widget style hint associated with it.
 static const bool TabBar_InactiveTabsHaveSpecular = false;
+
+qreal lineEditRounding()
+{
+    QVariant val = qApp->property("PhantomStyle::Button_Rounding");
+    return val.isValid() ? val.toReal() / 2.0 : LineEdit_Rounding;
+}
 
 qreal pushButtonRounding()
 {
@@ -1332,14 +1338,43 @@ Q_NEVER_INLINE void paintBorderedRoundRect(QPainter* p, QRect rect,
     return;
   if (!stroke && !fill)
     return;
-  bool aa = p->testRenderHint(QPainter::Antialiasing);
-  if (radius > 0.5) {
+  //bool aa = p->testRenderHint(QPainter::Antialiasing);
+
+  QRectF rf = rect;
+  p->setBrush(buttonBrush(swatch, fill));
+  p->setRenderHint(QPainter::Antialiasing);
+
+  if (stroke)
+  {
+      qreal w = 2.0;
+      QPen pen = swatch.pen(stroke);
+      pen.setWidthF(w);
+      p->setPen(pen);
+      rf.adjust(w / 2.0, w / 2.0, -w, -w);
+  }
+  else
+  {
+      p->setPen(Qt::NoPen);
+  }
+
+  p->drawRoundedRect(rf, radius, radius);
+
+
+
+  /*if (radius > 0.5) {
     if (!aa)
       p->setRenderHint(QPainter::Antialiasing);
-    p->setPen(swatch.pen(stroke));
-    p->setBrush(buttonBrush(swatch, fill));
-    QRectF rf((qreal)rect.x() + 0.5, (qreal)rect.y() + 0.5,
-              (qreal)rect.width() - 1.0, (qreal)rect.height() - 1.0);
+    if (stroke !=  S_none)
+    {
+        QPen pen = swatch.pen(stroke);
+        pen.setWidthF(2.0);
+        p->setPen(pen);
+        p->setBrush(buttonBrush(swatch, fill));
+        qreal d = stroke == S_none ? 0.0 : pen.widthF();
+        QRectF rf((qreal)rect.x() + d, (qreal)rect.y() + d,
+                  (qreal)rect.width() - d * 2, (qreal)rect.height() - d * 2);
+    }
+
     p->drawRoundedRect(rf, radius, radius);
   } else {
     if (aa)
@@ -1350,7 +1385,7 @@ Q_NEVER_INLINE void paintBorderedRoundRect(QPainter* p, QRect rect,
     if (fill) {
       p->fillRect(rect.adjusted(1, 1, -1, -1), buttonBrush(swatch, fill));
     }
-  }
+  }*/
 }
 } // namespace
 } // namespace Phantom
@@ -1462,8 +1497,8 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
       Ph::fillRectEdges(painter, frame, Qt::TopEdge, 1,
                         swatch.color(S_window_divider));
     } else {
-      Ph::paintBorderedRoundRect(painter, frame, Ph::GroupBox_Rounding, swatch,
-                                 S_window_divider, S_none);
+      //Ph::paintBorderedRoundRect(painter, frame, Ph::GroupBox_Rounding, swatch,
+      //                           S_window_divider, S_none);
     }
     break;
   }
@@ -1735,9 +1770,10 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     }
     QRect r = option->rect;
     Ph::PSave save(painter);
-    Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill);
-    Ph::paintBorderedRoundRect(painter, r.adjusted(1, 1, -1, -1), rounding,
-                               swatch, specular, S_none);
+    //Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill);
+    Ph::paintBorderedRoundRect(painter, r, rounding, swatch, S_none, fill);
+    //Ph::paintBorderedRoundRect(painter, r.adjusted(1, 1, -1, -1), rounding,
+    //                           swatch, specular, S_none);
     break;
   }
   case PE_IndicatorDockWidgetResizeHandle: {
@@ -1754,19 +1790,11 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     QRect r = option->rect;
     bool hasFocus = option->state & State_HasFocus;
     bool isEnabled = option->state & State_Enabled;
-    const qreal rounding = Ph::LineEdit_Rounding;
+    const qreal rounding = Ph::lineEditRounding();
     auto pen = hasFocus ? S_highlight_outline : S_window_outline;
     Ph::PSave save(painter);
     Ph::paintBorderedRoundRect(painter, r, rounding, swatch, pen, S_none);
     save.restore();
-    if (Ph::OverhangShadows && !hasFocus && isEnabled) {
-      // Imperfect when rounded, may leave a gap on left and right. Going
-      // closer would eat into the outline, though.
-      Ph::fillRectEdges(painter,
-                        r.adjusted(qRound(rounding / 2) + 1, 1,
-                                   -(qRound(rounding / 2) + 1), -1),
-                        Qt::TopEdge, 1, swatch.color(S_base_shadow));
-    }
     break;
   }
   case PE_PanelLineEdit: {
@@ -1778,7 +1806,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     // over the perimeter, because an inset with rounding enabled may cause
     // some miscolored separated pixels between the fill and the border, since
     // we're forced to paint them in two separate draw calls.
-    Ph::paintSolidRoundRect(painter, option->rect, Ph::LineEdit_Rounding,
+    Ph::paintSolidRoundRect(painter, option->rect, Ph::lineEditRounding(),
                             swatch, S_base);
     save.restore();
     if (panel->lineWidth > 0)
@@ -2019,32 +2047,22 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     if (isFlat && !isDown && !isOn)
       break;
     bool isEnabled = option->state & State_Enabled;
-    Q_UNUSED(isEnabled);
+    Q_UNUSED(isEnabled)
     bool hasFocus = (option->state & State_HasFocus &&
                      option->state & State_KeyboardFocusChange);
     const qreal rounding = Ph::pushButtonRounding();
     bool highlight = hasFocus || isDefault || isOn;
-    Swatchy outline = S_window_outline;
-    Swatchy fill = highlight ? S_button : S_window;
-    Swatchy specular = S_button_specular;
+    //Swatchy fill = highlight ? S_button_specular : S_button;
+    Swatchy fill = S_button;
     if (isDown) {
       fill = S_button_pressed;
-      specular = S_button_pressed_specular;
     }
     QRect r = option->rect;
     Ph::PSave save(painter);
-    bool lightTheme = option->palette.color(QPalette::Highlight).lightness() < option->palette.color(QPalette::Button).lightness();
-    if (highlight) {
-      if (lightTheme) {
-        outline = S_highlight_outline;
-      }
-      else {
-        specular = S_highlight_outline;
-      }
-    }
+    Swatchy outline = highlight ? S_highlight_outline : S_none;
+
+    //bool lightTheme = option->palette.color(QPalette::Highlight).lightness() < option->palette.color(QPalette::Button).lightness();
     Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill);
-    Ph::paintBorderedRoundRect(painter, r.adjusted(1, 1, -1, -1), rounding,
-                               swatch, specular, S_none);
     break;
   }
   case PE_FrameTabWidget: {
@@ -3884,7 +3902,7 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
       Swatchy buttonFill = isSunken ? S_button_pressed : S_button;
       // if (!hasOptions)
       //   buttonFill = S_window;
-      painter->fillRect(rect, swatch.color(buttonFill));
+      //painter->fillRect(rect, swatch.color(buttonFill));
       if (comboBox->frame) {
         QStyleOptionFrame buttonOption;
         buttonOption.QStyleOption::operator=(*comboBox);
@@ -3897,24 +3915,7 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
           buttonOption.state |= State_Sunken;
           buttonOption.state &= ~State_MouseOver;
         }
-        proxy()->drawPrimitive(PE_FrameLineEdit, &buttonOption, painter,
-                               widget);
-        QRect fr = proxy()->subControlRect(CC_ComboBox, option,
-                                           SC_ComboBoxEditField, widget);
-        QRect br = rect;
-        if (isLeftToRight) {
-          br.setLeft(fr.x() + fr.width());
-        } else {
-          br.setRight(fr.left() - 1);
-        }
-        Qt::Edge edge = isLeftToRight ? Qt::LeftEdge : Qt::RightEdge;
-        Swatchy color = hasFocus ? S_highlight_outline : S_window_outline;
-        br.adjust(0, 1, 0, -1);
-        Ph::fillRectEdges(painter, br, edge, 1, swatch.color(color));
-        br.adjust(1, 0, -1, 0);
-        Swatchy specular =
-            isSunken ? S_button_pressed_specular : S_button_specular;
-        Ph::fillRectOutline(painter, br, 1, swatch.color(specular));
+        proxy()->drawPrimitive(PE_FrameLineEdit, &buttonOption, painter, widget);
       }
     } else {
       QStyleOptionButton buttonOption;
