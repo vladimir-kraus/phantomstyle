@@ -2752,7 +2752,7 @@ void PhantomStyle::drawControl(ControlElement element,
       }
     }
 
-    const bool hasIcon = !menuItem->icon.isNull();
+    bool hasIcon = true; // reserve space for icon even if there is none
 
     if (hasIcon) {
       QRect iconRect = Ph::menuItemIconRect(metrics, option->direction,
@@ -2777,11 +2777,14 @@ void PhantomStyle::drawControl(ControlElement element,
 #endif
       QWindow* window = widget ? widget->windowHandle() : nullptr;
       QPixmap pixmap = menuItem->icon.pixmap(window, iconSize, mode, state);
-      const int pixw = (int)(pixmap.width() / pixmap.devicePixelRatio());
-      const int pixh = (int)(pixmap.height() / pixmap.devicePixelRatio());
-      QRect pixmapRect = QStyle::alignedRect(option->direction, Qt::AlignCenter,
-                                             QSize(pixw, pixh), iconRect);
-      painter->drawPixmap(pixmapRect.topLeft(), pixmap);
+      if (!pixmap.isNull())
+      {
+          const int pixw = (int)(pixmap.width() / pixmap.devicePixelRatio());
+          const int pixh = (int)(pixmap.height() / pixmap.devicePixelRatio());
+          QRect pixmapRect = QStyle::alignedRect(option->direction, Qt::AlignCenter,
+                                                 QSize(pixw, pixh), iconRect);
+          painter->drawPixmap(pixmapRect.topLeft(), pixmap);
+      }
     }
 
     // Draw main text and mnemonic text
@@ -4356,7 +4359,8 @@ QSize PhantomStyle::sizeFromContents(ContentsType type,
     // check mark, even if it doesn't have the checkable property.
     w += metrics.checkWidth + metrics.checkRightSpace;
 
-    if (!menuItem->icon.isNull()) {
+    bool hasIcon = true; // reserve space for icon even if there is none
+    if (hasIcon) {
       // Phantom disregards any user-specified icon sizing at the moment.
       w += metrics.fontHeight;
       w += metrics.iconRightSpace;
@@ -4376,7 +4380,7 @@ QSize PhantomStyle::sizeFromContents(ContentsType type,
     } else {
       h = metrics.totalHeight;
     }
-    if (!menuItem->icon.isNull()) {
+    if (hasIcon) {
 #if QT_CONFIG(combobox)
       if (auto combo = qobject_cast<const QComboBox*>(widget)) {
         h = qMax(combo->iconSize().height() + 2, h);
