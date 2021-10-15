@@ -1423,8 +1423,11 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
       proxy()->drawPrimitive(PE_PanelMenu, &copy, painter, widget);
       break;
     }
+
+    SwatchColor frameColor = (option->state & QStyle::State_HasFocus && widget->property("PhantomStyle::Focus_Frame").toBool())
+            ? S_highlight_outline : S_window_outline;
     Ph::fillRectOutline(painter, option->rect, 1,
-                        swatch.color(S_window_outline));
+                        swatch.color(frameColor));
     break;
   }
   case PE_FrameMenu: {
