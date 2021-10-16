@@ -2792,7 +2792,11 @@ void PhantomStyle::drawControl(ControlElement element,
     if (!s.isEmpty()) {
       QRect textRect =
           Ph::menuItemTextRect(metrics, option->direction, itemRect, hasSubMenu,
-                               hasIcon, 0);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+                               hasIcon, menuItem->reservedShortcutWidth);
+#else
+                               hasIcon, menuItem->tabWidth);
+#endif
       int t = s.indexOf(QLatin1Char('\t'));
       int text_flags = Qt::AlignLeft | Qt::AlignTop | Qt::TextShowMnemonic |
                        Qt::TextDontClip | Qt::TextSingleLine;
@@ -2865,7 +2869,11 @@ void PhantomStyle::drawControl(ControlElement element,
       if (t >= 0) {
         QRect mnemonicR =
             Ph::menuItemMnemonicRect(metrics, option->direction, itemRect,
-                                     hasSubMenu, 0);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+                                     hasSubMenu, menuItem->reservedShortcutWidth);
+#else
+                                     hasSubMenu, menuItem->tabWidth);
+#endif
         const QString textToDrawRef = s.mid(t + 1);
         const QString unsafeTextToDraw = QString::fromRawData(
             textToDrawRef.constData(), textToDrawRef.size());
