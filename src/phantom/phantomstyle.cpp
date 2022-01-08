@@ -231,7 +231,7 @@ QColor outlineOf(const QPalette& pal) {
   return adjustLightness(pal.color(QPalette::Window), -0.1);
 }
 QColor gutterColorOf(const QPalette& pal) {
-  return adjustLightness(pal.color(QPalette::Window), -0.03);
+  return pal.color(QPalette::Button);
 }
 QColor lightShadeOf(const QColor& underlying) {
   return adjustLightness(underlying, 0.07);
@@ -485,7 +485,7 @@ Q_ALWAYS_INLINE quint64 fastfragile_hash_qpalette(const QPalette& p) {
   // guard for it, so that it will default to a more safe definition on the
   // next guaranteed big breaking change for Qt. A warning will hopefully get
   // someone to double-check it at some point in the future.
-#warning "Verify contents and layout of QPalette::cacheKey() have not changed"
+//#warning "Verify contents and layout of QPalette::cacheKey() have not changed"
   QtPrivate::QHashCombine c;
   uint h = qHash(p.currentColorGroup());
   h = c(h, (uint)(x.u & 0xFFFFFFFFu));
