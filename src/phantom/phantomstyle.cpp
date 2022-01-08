@@ -231,7 +231,7 @@ QColor outlineOf(const QPalette& pal) {
   return adjustLightness(pal.color(QPalette::Window), -0.1);
 }
 QColor gutterColorOf(const QPalette& pal) {
-  return pal.color(QPalette::Button);
+  return pal.color(QPalette::Window);
 }
 QColor lightShadeOf(const QColor& underlying) {
   return adjustLightness(underlying, 0.07);
