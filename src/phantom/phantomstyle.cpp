@@ -185,10 +185,10 @@ qreal toolButtonRounding()
     return val.isValid() ? val.toReal() : ToolButton_Rounding;
 }
 
-bool buttonGradient()
+qreal buttonGradient()
 {
     QVariant val = qApp->property("PhantomStyle::Button_Gradient");
-    return val.isValid() ? val.toBool() : false;
+    return val.isValid() ? val.toReal() : 0.0;
 }
 
 struct Grad {
@@ -578,14 +578,15 @@ Q_NEVER_INLINE PhSwatchPtr getCachedSwatchOfQPalette(
 
 QBrush buttonBrush(const PhSwatch& swatch, Swatchy fill)
 {
-    if (fill && buttonGradient())
+    if (fill && buttonGradient() != 0.0)
     {
         // TODO: cache?
         QLinearGradient gradient({0.0, 0.0}, {0.0, 1.0});
         gradient.setCoordinateMode(QGradient::ObjectMode);
         QColor fillColor = swatch.color(fill);
-        gradient.setColorAt(0.0, fillColor.lighter(105));
-        gradient.setColorAt(1.0, fillColor.lighter(95));
+        int adjustment = qRound(100.0 * buttonGradient());
+        gradient.setColorAt(0.0, fillColor.lighter(100 + adjustment));
+        gradient.setColorAt(1.0, fillColor.lighter(100 - adjustment));
         return QBrush(gradient);
     }
     else
@@ -2064,8 +2065,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     // temp code
     Ph::PSave save(painter);
     if (bg) {
-      Ph::paintSolidRoundRect(painter, option->rect, Ph::pushButtonRounding(),
-                              swatch, bg);
+      Ph::paintSolidRoundRect(painter, option->rect, Ph::pushButtonRounding(), swatch, bg);
     }
     QPen pen = swatch.pen(fg);
     pen.setCapStyle(Qt::RoundCap);
