@@ -1096,7 +1096,7 @@ Q_NEVER_INLINE void drawCheck(QPainter* painter, QPen& scratchPen,
   using namespace Phantom::SwatchColors;
   qreal rx, ry, rw, rh;
   QRectF(r).getRect(&rx, &ry, &rw, &rh);
-  qreal penWidth = 0.25 * qMin(rw, rh);
+  qreal penWidth = 0.15 * qMin(rw, rh);
   qreal dimx = rw - penWidth;
   qreal dimy = rh - penWidth;
   if (dimx < 0.5 || dimy < 0.5)
@@ -1512,7 +1512,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     qreal rx, ry, rw, rh;
     QRectF(option->rect).getRect(&rx, &ry, &rw, &rh);
     qreal dim = qMin(rw, rh);
-    const qreal insetScale = 0.8;
+    const qreal insetScale = 0.7;
     qreal dimx = dim * insetScale * Ph::CheckMark_WidthOfHeightScale;
     qreal dimy = dim * insetScale;
     QRectF r_(rx + (rw - dimx) / 2, ry + (rh - dimy) / 2, dimx, dimy);
@@ -1820,7 +1820,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
       QRectF r_(rx + (rw - dimx) / 2, ry + (rh - dimy) / 2, dimx, dimy);
       Ph::drawHyphen(painter, d->checkBox_pen_scratch, r_, swatch, fgColor);
     } else if (checkbox->state & State_On) {
-      const qreal insetScale = 0.8;
+      const qreal insetScale = 0.7;
       qreal rx, ry, rw, rh;
       QRectF(r.adjusted(1, 1, -1, -1)).getRect(&rx, &ry, &rw, &rh);
       // kinda wrong, assumes we're already square, but we probably are
