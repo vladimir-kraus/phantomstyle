@@ -242,9 +242,6 @@ QColor darkShadeOf(const QColor& underlying) {
 QColor overhangShadowOf(const QColor& underlying) {
   return adjustLightness(underlying, -0.05);
 }
-QColor sliderGutterShadowOf(const QColor& underlying) {
-  return adjustLightness(underlying, -0.01);
-}
 QColor specularOf(const QColor& underlying) {
   return adjustLightness(underlying, 0.03);
 }
@@ -329,7 +326,6 @@ using Swatchy = SwatchColors::SwatchColor;
 
 enum {
   Num_SwatchColors = SwatchColors::S_scrollbarGutter_disabled + 1,
-  Num_ShadowSteps = 3,
 };
 
 struct PhSwatch : public QSharedData {
@@ -340,7 +336,6 @@ struct PhSwatch : public QSharedData {
   // QPen -> QBrush) every time we want to get a QColor.
   QBrush brushes[Num_SwatchColors];
   QPen pens[Num_SwatchColors];
-  QColor scrollbarShadowColors[Num_ShadowSteps];
 
   // Note: the casts to int in the assert macros are to suppress a false
   // positive warning for tautological comparison in the clang linter.
@@ -437,13 +432,6 @@ Q_NEVER_INLINE void PhSwatch::loadFromQPalette(const QPalette& pal) {
     pens[i].setBrush(brushes[i]);
     // Width is already 1, don't need to set it. Caps and joins already fine at
     // their defaults, too.
-  }
-
-  Grad gutterGrad(Dc::sliderGutterShadowOf(colors[S_scrollbarGutter]),
-                  colors[S_scrollbarGutter]);
-  for (int i = 0; i < Num_ShadowSteps; ++i) {
-    scrollbarShadowColors[i] =
-        gutterGrad.sample((qreal)i / (qreal)Num_ShadowSteps);
   }
 }
 
@@ -3667,78 +3655,9 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
       // Top or left dark edge
       Ph::fillRectEdges(painter, scrollBarGroove, edges, 1,
                         swatch.color(S_window_outline));
-      // Ring shadow
-      if (Ph::ScrollbarShadows && isEnabled) {
-        for (int i = 0; i < Ph::Num_ShadowSteps; ++i) {
-          Ph::fillRectOutline(painter, r, 1, swatch.scrollbarShadowColors[i]);
-          r.adjust(1, 1, -1, -1);
-        }
-      }
+
       // General BG fill
       painter->fillRect(r, swatch.color(grooveColor));
-
-      // Bonus fun: also draw a shadow cast by the scrollbar slider
-      if (Ph::ScrollbarShadows && scrollBar->subControls & SC_ScrollBarSlider &&
-          isEnabled && hasRange) {
-        if (isHorizontal) {
-          r = scrollBarSlider;
-          int leftwardEnd = scrollBarGroove.left() + 1;
-          int availWidth = r.left() - leftwardEnd;
-          int steps = qMin(availWidth / 2, (int)Ph::Num_ShadowSteps);
-          if (steps < 0)
-            steps = 0;
-          r.adjust(-2, 2, 0, -1);
-          r.setWidth(1);
-          for (int i = 0; i < steps; ++i) {
-            painter->fillRect(r, swatch.scrollbarShadowColors[i]);
-            r.adjust(-1, 1, -1, -1);
-          }
-          r = scrollBarSlider;
-          int rightwardEnd =
-              scrollBarGroove.left() + scrollBarGroove.width() - 2;
-          availWidth = rightwardEnd - r.right();
-          steps = qMin(availWidth / 2, (int)Ph::Num_ShadowSteps);
-          if (steps < 0)
-            steps = 0;
-          r.moveLeft(r.right() + 1);
-          r.adjust(1, 2, 0, -1);
-          r.setWidth(1);
-          for (int i = 0; i < steps; ++i) {
-            painter->fillRect(r, swatch.scrollbarShadowColors[i]);
-            r.adjust(1, 1, 1, -1);
-          }
-        } else {
-          r = scrollBarSlider;
-          int topEnd = scrollBarGroove.top() + 1;
-          int availWidth = r.top() - topEnd;
-          int steps = qMin(availWidth / 2, (int)Ph::Num_ShadowSteps);
-          if (steps < 0)
-            steps = 0;
-          r.adjust(2, -2, -1, 0);
-          r.setHeight(1);
-          if (!isLeftToRight)
-            r.translate(-1, 0);
-          for (int i = 0; i < steps; ++i) {
-            painter->fillRect(r, swatch.scrollbarShadowColors[i]);
-            r.adjust(1, -1, -1, -1);
-          }
-          r = scrollBarSlider;
-          int botEnd = scrollBarGroove.bottom() - 1;
-          availWidth = botEnd - r.bottom();
-          steps = qMin(availWidth / 2, (int)Ph::Num_ShadowSteps);
-          if (steps < 0)
-            steps = 0;
-          r.setTop(r.bottom() + 1);
-          r.setHeight(1);
-          r.adjust(2, 2, -1, 0);
-          if (!isLeftToRight)
-            r.translate(-1, 0);
-          for (int i = 0; i < steps; ++i) {
-            painter->fillRect(r, swatch.scrollbarShadowColors[i]);
-            r.adjust(1, 1, -1, 1);
-          }
-        }
-      }
     }
 
     // Slider thumb
