@@ -1096,7 +1096,7 @@ Q_NEVER_INLINE void drawCheck(QPainter* painter, QPen& scratchPen,
   using namespace Phantom::SwatchColors;
   qreal rx, ry, rw, rh;
   QRectF(r).getRect(&rx, &ry, &rw, &rh);
-  qreal penWidth = 0.15 * qMin(rw, rh);
+  qreal penWidth = 0.2 * qMin(rw, rh);
   qreal dimx = rw - penWidth;
   qreal dimy = rh - penWidth;
   if (dimx < 0.5 || dimy < 0.5)
