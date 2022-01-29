@@ -576,9 +576,9 @@ Q_NEVER_INLINE PhSwatchPtr getCachedSwatchOfQPalette(
   return deep_getCachedSwatchOfQPalette(cache, cacheCount, qpalette);
 }
 
-QBrush buttonBrush(const PhSwatch& swatch, Swatchy fill)
+QBrush buttonBrush(const PhSwatch& swatch, Swatchy fill, bool enableGradient)
 {
-    if (fill && buttonGradient() != 0.0)
+    if (enableGradient && fill != SwatchColors::S_none && buttonGradient() != 0.0)
     {
         // TODO: cache?
         QLinearGradient gradient({0.0, 0.0}, {0.0, 1.0});
@@ -1316,7 +1316,8 @@ Q_NEVER_INLINE void paintSolidRoundRect(QPainter* p, QRect rect, qreal radius,
 }
 Q_NEVER_INLINE void paintBorderedRoundRect(QPainter* p, QRect rect,
                                            qreal radius, const PhSwatch& swatch,
-                                           Swatchy stroke, Swatchy fill) {
+                                           Swatchy stroke, Swatchy fill,
+                                           bool enableGradient = false) {
   if (rect.width() < 1 || rect.height() < 1)
     return;
   if (!stroke && !fill)
@@ -1326,7 +1327,7 @@ Q_NEVER_INLINE void paintBorderedRoundRect(QPainter* p, QRect rect,
     if (!aa)
       p->setRenderHint(QPainter::Antialiasing);
     p->setPen(swatch.pen(stroke));
-    p->setBrush(buttonBrush(swatch, fill));
+    p->setBrush(buttonBrush(swatch, fill, enableGradient));
     QRectF rf((qreal)rect.x() + 0.5, (qreal)rect.y() + 0.5,
               (qreal)rect.width() - 1.0, (qreal)rect.height() - 1.0);
     p->drawRoundedRect(rf, radius, radius);
@@ -1337,7 +1338,7 @@ Q_NEVER_INLINE void paintBorderedRoundRect(QPainter* p, QRect rect,
       fillRectOutline(p, rect, 1, swatch.color(stroke));
     }
     if (fill) {
-      p->fillRect(rect.adjusted(1, 1, -1, -1), buttonBrush(swatch, fill));
+      p->fillRect(rect.adjusted(1, 1, -1, -1), buttonBrush(swatch, fill, enableGradient));
     }
   }
 }
@@ -1727,7 +1728,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     }
     QRect r = option->rect;
     Ph::PSave save(painter);
-    Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill);
+    Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill, true);
     Ph::paintBorderedRoundRect(painter, r.adjusted(1, 1, -1, -1), rounding,
                                swatch, specular, S_none);
     break;
@@ -2034,7 +2035,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
         specular = S_highlight_outline;
       }
     }
-    Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill);
+    Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill, true);
     Ph::paintBorderedRoundRect(painter, r.adjusted(1, 1, -1, -1), rounding,
                                swatch, specular, S_none);
     break;
