@@ -4422,6 +4422,27 @@ QSize PhantomStyle::sizeFromContents(ContentsType type,
     }
     return sz;
   }
+  case CT_ComboBox: {
+#if QT_CONFIG(combobox)
+    if (const QStyleOptionComboBox *cmb = qstyleoption_cast<const QStyleOptionComboBox *>(option))
+    {
+        QSize sz = size;
+        int fw = cmb->frame ? proxy()->pixelMetric(PM_ComboBoxFrameWidth, option, widget) * 2 : 0;
+        const int textMargins = 2 * (proxy()->pixelMetric(PM_FocusFrameHMargin) + 1);
+        int pad = 0;
+        if (cmb->editable) {
+          pad = (int)Ph::dpiScaled(Ph::LineEdit_ContentsHPad);
+        } else {
+          pad = (int)Ph::dpiScaled(Ph::ComboBox_NonEditable_ContentsHPad);
+        }
+        // QItemDelegate::sizeHint expands the textMargins two times, thus the 2*textMargins...
+        // Note: this calculation may be not correct.
+        sz = QSize(sz.width() + fw + sz.height() + 2 * textMargins + 2 * pad, sz.height() + fw);
+        return sz;
+    }
+#endif
+    break;
+  }
 #endif
   default:
     break;
@@ -4468,25 +4489,6 @@ QSize PhantomStyle::sizeFromContents(ContentsType type,
   case CT_ToolButton:
     newSize += QSize(2, 2);
     break;
-  case CT_ComboBox: {
-    newSize += QSize(0, 3);
-#if QT_CONFIG(combobox)
-    auto cb = qstyleoption_cast<const QStyleOptionComboBox*>(option);
-    // Non-editable combo boxes have some extra padding on the left side,
-    // similar to push buttons. We should account for that here to avoid text
-    // being clipped off.
-    if (cb) {
-      int pad = 0;
-      if (cb->editable) {
-        pad = (int)Ph::dpiScaled(Ph::LineEdit_ContentsHPad);
-      } else {
-        pad = (int)Ph::dpiScaled(Ph::ComboBox_NonEditable_ContentsHPad);
-      }
-      newSize.rwidth() += pad * 2;
-    }
-#endif
-    break;
-  }
   case CT_LineEdit: {
     newSize += QSize(0, 3);
     int pad = (int)Ph::dpiScaled(Ph::LineEdit_ContentsHPad);
