@@ -4256,10 +4256,7 @@ QSize PhantomStyle::sizeFromContents(ContentsType type,
     bool hasSubMenu = menuItem->menuItemType == QStyleOptionMenuItem::SubMenu;
     bool isSeparator =
         menuItem->menuItemType == QStyleOptionMenuItem::Separator;
-    int fontMetricsHeight = -1;
-    if (fontMetricsHeight == -1) {
-      fontMetricsHeight = option->fontMetrics.height();
-    }
+    int fontMetricsHeight = option->fontMetrics.height();
     auto metrics = Ph::MenuItemMetrics::ofFontHeight(fontMetricsHeight);
     // Incoming width is the sum of the visual widths of the main item text and
     // the mnemonic text (if any). To this width we will add the widths of the
