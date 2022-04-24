@@ -260,9 +260,7 @@ QColor specularOf(const QColor& underlying) {
 QColor pressedOf(const QColor& color) { return adjustLightness(color, -0.02); }
 QColor indicatorColorOf(const QPalette& palette,
                         QPalette::ColorGroup group = QPalette::Current) {
-  return Grad(palette.color(group, QPalette::WindowText),
-              palette.color(group, QPalette::Button))
-      .sample(0.45);
+  return palette.color(group, QPalette::WindowText);
 }
 QColor inactiveTabFillColorOf(const QColor& underlying) {
   // used to be -0.01
@@ -3812,10 +3810,17 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
                                                   SC_ComboBoxArrow, widget);
     // Draw a line edit
     if (comboBox->editable) {
-      Swatchy buttonFill = isSunken ? S_button_pressed : S_button;
-      // if (!hasOptions)
-      //   buttonFill = S_window;
-      painter->fillRect(rect, swatch.color(buttonFill));
+      Swatchy buttonFill = isSunken ? S_button_pressed : S_window;
+
+      QRect fr = proxy()->subControlRect(CC_ComboBox, option, SC_ComboBoxEditField, widget);
+      QRect br = rect;
+      if (isLeftToRight) {
+        br.setLeft(fr.x() + fr.width());
+      } else {
+        br.setRight(fr.left() - 1);
+      }
+      painter->fillRect(br, swatch.color(buttonFill));
+
       if (comboBox->frame) {
         QStyleOptionFrame buttonOption;
         buttonOption.QStyleOption::operator=(*comboBox);
@@ -3828,25 +3833,7 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
           buttonOption.state |= State_Sunken;
           buttonOption.state &= ~State_MouseOver;
         }
-        proxy()->drawPrimitive(PE_FrameLineEdit, &buttonOption, painter,
-                               widget);
-        /*QRect fr = proxy()->subControlRect(CC_ComboBox, option,
-                                           SC_ComboBoxEditField, widget);
-        QRect br = rect;
-        if (isLeftToRight) {
-          br.setLeft(fr.x() + fr.width());
-        } else {
-          br.setRight(fr.left() - 1);
-        }
-        Qt::Edge edge = isLeftToRight ? Qt::LeftEdge : Qt::RightEdge;
-        Swatchy color = hasFocus ? S_highlight_outline : S_window_outline;
-        br.adjust(0, 1, 0, -1);
-        Ph::fillRectEdges(painter, br, edge, 1, swatch.color(color));
-        br.adjust(1, 0, -1, 0);
-        Swatchy specular =
-            isSunken ? S_button_pressed_specular : S_button_specular;
-        Ph::fillRectOutline(painter, br, 1, swatch.color(specular));*/
-
+        proxy()->drawPrimitive(PE_FrameLineEdit, &buttonOption, painter, widget);
       }
     } else {
       QStyleOptionButton buttonOption;
