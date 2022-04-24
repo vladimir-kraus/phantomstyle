@@ -196,6 +196,13 @@ static bool useQMenuForComboBoxPopup()
     return val.isValid() ? val.toBool() : true;
 }
 
+static bool toolButtonHoverEffect()
+{
+    // Note: in order to work, tool buttons need to have attribute WA_Hover set ON.
+    QVariant val = qApp->property("PhantomStyle::ToolButtonHoverEffect");
+    return val.isValid() ? val.toBool() : true;
+}
+
 struct Grad {
   Grad(const QColor& from, const QColor& to) {
     rgbA = Rgb::ofQColor(from);
@@ -1714,11 +1721,12 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
   case PE_PanelButtonTool: {
     bool isDown = option->state & State_Sunken;
     bool isOn = option->state & State_On;
+    bool isMouseOver = option->state & State_MouseOver && Phantom::toolButtonHoverEffect();
     bool hasFocus = (option->state & State_HasFocus &&
                      option->state & State_KeyboardFocusChange);
     const qreal rounding = Ph::toolButtonRounding();
     Swatchy outline = S_window_outline;
-    Swatchy fill = S_button;
+    Swatchy fill = (hasFocus || isOn || isMouseOver) ? S_button : S_window;
     Swatchy specular = S_button_specular;
     if (isDown) {
       fill = S_button_pressed;
