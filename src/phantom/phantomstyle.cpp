@@ -2020,32 +2020,24 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     if (isFlat && !isDown && !isOn)
       break;
     bool isEnabled = option->state & State_Enabled;
-    Q_UNUSED(isEnabled);
+    Q_UNUSED(isEnabled)
     bool hasFocus = (option->state & State_HasFocus &&
                      option->state & State_KeyboardFocusChange);
     const qreal rounding = Ph::pushButtonRounding();
     bool highlight = hasFocus || isDefault || isOn;
-    Swatchy outline = S_window_outline;
     Swatchy fill = highlight ? S_button : S_window;
-    Swatchy specular = S_button_specular;
     if (isDown) {
       fill = S_button_pressed;
-      specular = S_button_pressed_specular;
     }
     QRect r = option->rect;
     Ph::PSave save(painter);
+
     bool lightTheme = option->palette.color(QPalette::Highlight).lightness() < option->palette.color(QPalette::Button).lightness();
+    Swatchy outline = lightTheme ? S_window_outline : S_button;
     if (highlight) {
-      if (lightTheme) {
-        outline = S_highlight_outline;
-      }
-      else {
-        specular = S_highlight_outline;
-      }
+        outline = S_highlight;
     }
     Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill, true);
-    Ph::paintBorderedRoundRect(painter, r.adjusted(1, 1, -1, -1), rounding,
-                               swatch, specular, S_none);
     break;
   }
   case PE_FrameTabWidget: {
@@ -3838,7 +3830,7 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
         }
         proxy()->drawPrimitive(PE_FrameLineEdit, &buttonOption, painter,
                                widget);
-        QRect fr = proxy()->subControlRect(CC_ComboBox, option,
+        /*QRect fr = proxy()->subControlRect(CC_ComboBox, option,
                                            SC_ComboBoxEditField, widget);
         QRect br = rect;
         if (isLeftToRight) {
@@ -3853,7 +3845,8 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
         br.adjust(1, 0, -1, 0);
         Swatchy specular =
             isSunken ? S_button_pressed_specular : S_button_specular;
-        Ph::fillRectOutline(painter, br, 1, swatch.color(specular));
+        Ph::fillRectOutline(painter, br, 1, swatch.color(specular));*/
+
       }
     } else {
       QStyleOptionButton buttonOption;
