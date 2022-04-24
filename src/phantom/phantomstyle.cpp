@@ -155,7 +155,6 @@ static const bool MenuBarLeftMargin = false;
 static const bool AllowToolBarAutoRaise = true;
 // Note that this only applies to the disclosure etc. decorators in tree views.
 static const bool ShowItemViewDecorationSelected = false;
-static const bool UseQMenuForComboBoxPopup = true;
 static const bool ItemView_UseFontHeightForDecorationSize = true;
 
 // Whether or not the non-raised tabs in a tab bar have shininess/highlights to
@@ -173,22 +172,28 @@ static const bool ItemView_UseFontHeightForDecorationSize = true;
 // per-widget style hint associated with it.
 static const bool TabBar_InactiveTabsHaveSpecular = false;
 
-qreal pushButtonRounding()
+static qreal pushButtonRounding()
 {
     QVariant val = qApp->property("PhantomStyle::Button_Rounding");
     return val.isValid() ? val.toReal() : PushButton_Rounding;
 }
 
-qreal toolButtonRounding()
+static qreal toolButtonRounding()
 {
     QVariant val = qApp->property("PhantomStyle::Button_Rounding");
     return val.isValid() ? val.toReal() : ToolButton_Rounding;
 }
 
-qreal buttonGradient()
+static qreal buttonGradient()
 {
     QVariant val = qApp->property("PhantomStyle::Button_Gradient");
     return val.isValid() ? val.toReal() : 0.0;
+}
+
+static bool useQMenuForComboBoxPopup()
+{
+    QVariant val = qApp->property("PhantomStyle::UseQMenuForComboBoxPopup");
+    return val.isValid() ? val.toBool() : true;
 }
 
 struct Grad {
@@ -2843,7 +2848,7 @@ void PhantomStyle::drawControl(ControlElement element,
       // expected font for a QMenu and use that for calculating its metrics.
       // Unfortunately, that probably won't work so great if the combo/menu
       // actually wants to use custom fonts in its listing, since we'd be
-      // ignoring it. That's how UseQMenuForComboBoxPopup currently works,
+      // ignoring it. That's how useQMenuForComboBoxPopup currently works,
       // though it tests for Qt::WA_SetFont as an attempt at recognizing when
       // it shouldn't use the qt font hash for QMenu.
 #if QT_CONFIG(combobox) && 0
@@ -5009,7 +5014,7 @@ int PhantomStyle::styleHint(StyleHint hint, const QStyleOption* option,
   case SH_RubberBand_Mask:
     return 0;
   case SH_ComboBox_Popup: {
-    if (!Phantom::UseQMenuForComboBoxPopup)
+    if (!Phantom::useQMenuForComboBoxPopup())
       return 0;
 #if QT_CONFIG(combobox)
     // Fusion did this, but we don't because of font bugs (especially in high
