@@ -149,7 +149,6 @@ static const qreal MenuItem_IconRightSpaceFontRatio = 1.0 / 3.0;
 static const bool BranchesOnEdge = false;
 static const bool OverhangShadows = false;
 static const bool IndicatorShadows = false;
-static const bool ScrollbarShadows = true;
 static const bool MenuExtraBottomMargin = true;
 static const bool MenuBarLeftMargin = false;
 static const bool AllowToolBarAutoRaise = true;
@@ -3607,16 +3606,11 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
       break;
     bool isHorizontal = scrollBar->orientation == Qt::Horizontal;
     bool isLeftToRight = option->direction != Qt::RightToLeft;
-    auto pr = proxy();
     bool isSunken = scrollBar->state & State_Sunken;
-    QRect scrollBarSubLine =
-        pr->subControlRect(control, scrollBar, SC_ScrollBarSubLine, widget);
-    QRect scrollBarAddLine =
-        pr->subControlRect(control, scrollBar, SC_ScrollBarAddLine, widget);
     QRect scrollBarSlider =
-        pr->subControlRect(control, scrollBar, SC_ScrollBarSlider, widget);
+        proxy()->subControlRect(control, scrollBar, SC_ScrollBarSlider, widget);
     QRect scrollBarGroove =
-        pr->subControlRect(control, scrollBar, SC_ScrollBarGroove, widget);
+        proxy()->subControlRect(control, scrollBar, SC_ScrollBarGroove, widget);
 
     bool scrollBarGrooveShown = scrollBar->subControls & SC_ScrollBarGroove;
     bool isEnabled = scrollBar->state & State_Enabled;
@@ -3684,103 +3678,6 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
       if (thumbSpecular) {
         Ph::fillRectOutline(painter, mainRect, 1, swatch.color(thumbSpecular));
       }
-    }
-
-    // The SubLine (up/left) buttons
-    if (scrollBar->subControls & SC_ScrollBarSubLine) {
-      Swatchy fill, specular;
-      if (isSunken && scrollBar->activeSubControls & SC_ScrollBarSubLine) {
-        fill = S_button_pressed;
-        specular = S_button_pressed_specular;
-      } else if (hasRange) {
-        fill = S_button;
-        specular = S_button_specular;
-      } else {
-        fill = S_window;
-        specular = S_none;
-      }
-
-      QRect btnRect = scrollBarSubLine;
-      QRect bgRect = btnRect;
-      Qt::Edges edges;
-      if (isHorizontal) {
-        if (isLeftToRight) {
-          edges = Qt::TopEdge | Qt::RightEdge;
-          bgRect.adjust(0, 1, -1, 0);
-        } else {
-          edges = Qt::LeftEdge | Qt::TopEdge;
-          bgRect.adjust(1, 1, 0, 0);
-        }
-      } else {
-        if (isLeftToRight) {
-          edges = Qt::LeftEdge | Qt::BottomEdge;
-          bgRect.adjust(1, 0, 0, -1);
-        } else {
-          edges = Qt::RightEdge | Qt::BottomEdge;
-          bgRect.adjust(0, 0, -1, -1);
-        }
-      }
-      // Outline, fill, specular
-      Ph::fillRectEdges(painter, btnRect, edges, 1,
-                        swatch.color(S_window_outline));
-      painter->fillRect(bgRect, swatch.color(fill));
-      if (specular) {
-        Ph::fillRectOutline(painter, bgRect, 1, swatch.color(specular));
-      }
-
-      // Arrows
-      Qt::ArrowType arrowType;
-      if (isHorizontal) {
-        arrowType = isLeftToRight ? Qt::LeftArrow : Qt::RightArrow;
-      } else {
-        arrowType = Qt::UpArrow;
-      }
-      int adj = qMin(bgRect.width(), bgRect.height()) / 4;
-      Ph::drawArrow(painter, bgRect.adjusted(adj, adj, -adj, -adj), arrowType,
-                    swatch, hasRange);
-    }
-
-    // The AddLine (down/right) button
-    if (scrollBar->subControls & SC_ScrollBarAddLine) {
-      Swatchy fill, specular;
-      if (isSunken && scrollBar->activeSubControls & SC_ScrollBarAddLine) {
-        fill = S_button_pressed;
-        specular = S_button_pressed_specular;
-      } else if (hasRange) {
-        fill = S_button;
-        specular = S_button_specular;
-      } else {
-        fill = S_window;
-        specular = S_none;
-      }
-      QRect btnRect = scrollBarAddLine;
-      QRect bgRect = btnRect;
-      Qt::Edges edges;
-      if (isLeftToRight) {
-        edges = Qt::LeftEdge | Qt::TopEdge;
-        bgRect.adjust(1, 1, 0, 0);
-      } else {
-        edges = Qt::TopEdge | Qt::RightEdge;
-        bgRect.adjust(0, 1, -1, 0);
-      }
-      // Outline, fill, specular
-      Ph::fillRectEdges(painter, btnRect, edges, 1,
-                        swatch.color(S_window_outline));
-      painter->fillRect(bgRect, swatch.color(fill));
-      if (specular) {
-        Ph::fillRectOutline(painter, bgRect, 1, swatch.color(specular));
-      }
-
-      // Arrows
-      Qt::ArrowType arrowType;
-      if (isHorizontal) {
-        arrowType = isLeftToRight ? Qt::RightArrow : Qt::LeftArrow;
-      } else {
-        arrowType = Qt::DownArrow;
-      }
-      int adj = qMin(bgRect.width(), bgRect.height()) / 4;
-      Ph::drawArrow(painter, bgRect.adjusted(adj, adj, -adj, -adj), arrowType,
-                    swatch, hasRange);
     }
     break;
   }
@@ -4567,9 +4464,54 @@ QRect PhantomStyle::subControlRect(ComplexControl control,
                                    const QStyleOptionComplex* option,
                                    SubControl subControl,
                                    const QWidget* widget) const {
+
+    switch (control) {
+    case QStyle::CC_ScrollBar: {
+        switch (subControl) {
+          case QStyle::SC_ScrollBarGroove:
+            return option->rect;
+          case QStyle::SC_ScrollBarSlider:
+            if (const QStyleOptionSlider *scrollbar = qstyleoption_cast<const QStyleOptionSlider *>(option)) {
+                const QRect scrollBarRect = scrollbar->rect;
+                int sbextent = 0;
+                int maxlen = ((scrollbar->orientation == Qt::Horizontal) ?
+                              scrollBarRect.width() : scrollBarRect.height()) - (sbextent * 2);
+                int sliderlen;
+                // calculate slider length
+                if (scrollbar->maximum != scrollbar->minimum) {
+                    uint range = scrollbar->maximum - scrollbar->minimum;
+                    sliderlen = (qint64(scrollbar->pageStep) * maxlen) / (range + scrollbar->pageStep);
+                    int slidermin = proxy()->pixelMetric(PM_ScrollBarSliderMin, scrollbar, widget);
+                    if (sliderlen < slidermin || range > INT_MAX / 2)
+                        sliderlen = slidermin;
+                    if (sliderlen > maxlen)
+                        sliderlen = maxlen;
+                } else {
+                    sliderlen = maxlen;
+                }
+                int sliderstart = sbextent + sliderPositionFromValue(scrollbar->minimum,
+                                                                     scrollbar->maximum,
+                                                                     scrollbar->sliderPosition,
+                                                                     maxlen - sliderlen,
+                                                                     scrollbar->upsideDown);
+                if (scrollbar->orientation == Qt::Horizontal)
+                    return QRect(sliderstart, 0, sliderlen, scrollBarRect.height());
+                else
+                    return QRect(0, sliderstart, scrollBarRect.width(), sliderlen);
+            }
+            break;
+          default:
+            return QRect();
+        }
+    default:
+      break;
+    }
+  }
+
   namespace Ph = Phantom;
   QRect rect =
       QCommonStyle::subControlRect(control, option, subControl, widget);
+
   switch (control) {
 #if QT_CONFIG(slider)
   case CC_Slider: {
