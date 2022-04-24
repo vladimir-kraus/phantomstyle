@@ -1760,14 +1760,14 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     Ph::PSave save(painter);
     Ph::paintBorderedRoundRect(painter, r, rounding, swatch, pen, S_none);
     save.restore();
-    if (Ph::OverhangShadows && !hasFocus && isEnabled) {
+    /*if (Ph::OverhangShadows && !hasFocus && isEnabled) {
       // Imperfect when rounded, may leave a gap on left and right. Going
       // closer would eat into the outline, though.
       Ph::fillRectEdges(painter,
                         r.adjusted(qRound(rounding / 2) + 1, 1,
                                    -(qRound(rounding / 2) + 1), -1),
                         Qt::TopEdge, 1, swatch.color(S_base_shadow));
-    }
+    }*/
     break;
   }
   case PE_PanelLineEdit: {
@@ -4211,7 +4211,10 @@ int PhantomStyle::pixelMetric(PixelMetric metric, const QStyleOption* option,
   default:
     return QCommonStyle::pixelMetric(metric, option, widget);
   }
-  return (int)Phantom::dpiScaled(val);
+  return val;
+  // TODO: originally it was DPI scaled.
+  // But it did not work for some widgets, e.g. combo box with High DPI?
+  //return (int)Phantom::dpiScaled(val);
 }
 
 QSize PhantomStyle::sizeFromContents(ContentsType type,
