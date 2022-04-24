@@ -3644,16 +3644,13 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
 
     // Slider thumb
     if (scrollBar->subControls & SC_ScrollBarSlider) {
-      Swatchy thumbFill, thumbSpecular;
+      Swatchy thumbFill;
       if (isSunken && scrollBar->activeSubControls & SC_ScrollBarSlider) {
         thumbFill = S_button_pressed;
-        thumbSpecular = S_button_pressed_specular;
       } else if (hasRange) {
         thumbFill = S_button;
-        thumbSpecular = S_button_specular;
       } else {
         thumbFill = S_window;
-        thumbSpecular = S_none;
       }
       Qt::Edges edges;
       QRect edgeRect = scrollBarSlider;
@@ -3675,9 +3672,6 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
       Ph::fillRectEdges(painter, edgeRect, edges, 1,
                         swatch.color(S_window_outline));
       painter->fillRect(mainRect, swatch.color(thumbFill));
-      if (thumbSpecular) {
-        Ph::fillRectOutline(painter, mainRect, 1, swatch.color(thumbSpecular));
-      }
     }
     break;
   }
