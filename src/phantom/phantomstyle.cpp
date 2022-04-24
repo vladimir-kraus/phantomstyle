@@ -338,6 +338,12 @@ enum {
   Num_SwatchColors = SwatchColors::S_scrollbarGutter_disabled + 1,
 };
 
+static Swatchy outlineSwatch(const QStyleOption* option)
+{
+    bool lightTheme = option->palette.color(QPalette::Highlight).lightness() < option->palette.color(QPalette::Button).lightness();
+    return lightTheme ? SwatchColors::S_window_outline : SwatchColors::S_button;
+}
+
 struct PhSwatch : public QSharedData {
   // The pens store the brushes within them, so storing the brushes here as
   // well is redundant. However, QPen::brush() does not return its brush by
@@ -411,7 +417,7 @@ Q_NEVER_INLINE void PhSwatch::loadFromQPalette(const QPalette& pal) {
   colors[S_base_divider] = Dc::dividerColor(colors[S_base]);
   colors[S_windowText_disabled] =
       pal.color(QPalette::Disabled, QPalette::WindowText);
-  colors[S_highlight_outline] = Dc::adjustLightness(colors[S_highlight], -0.05);
+  colors[S_highlight_outline] = colors[S_highlight];
   colors[S_highlight_specular] =
       isEnabled ? Dc::specularOf(colors[S_highlight]) : colors[S_highlight];
   colors[S_progressBar_outline] = Dc::progressBarOutlineColorOf(pal);
@@ -1723,7 +1729,6 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     bool hasFocus = (option->state & State_HasFocus &&
                      option->state & State_KeyboardFocusChange);
     const qreal rounding = Ph::toolButtonRounding();
-    Swatchy outline = S_button;
     Swatchy fill = (hasFocus || isOn || isMouseOver) ? S_button : S_window;
     if (isDown) {
       fill = S_button_pressed;
@@ -1731,9 +1736,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
       // kinda repurposing this, hmm
       fill = S_scrollbarGutter;
     }
-    if (hasFocus) {
-      outline = S_highlight_outline;
-    }
+    Swatchy outline = hasFocus ? S_highlight_outline : Phantom::outlineSwatch(option);
     QRect r = option->rect;
     Ph::PSave save(painter);
     Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill, true);
@@ -1751,21 +1754,12 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
   }
   case PE_FrameLineEdit: {
     QRect r = option->rect;
-    bool hasFocus = option->state & State_HasFocus;
-    bool isEnabled = option->state & State_Enabled;
     const qreal rounding = Ph::LineEdit_Rounding;
-    auto pen = hasFocus ? S_highlight_outline : S_window_outline;
+    bool hasFocus = option->state & State_HasFocus;
+    Swatchy outline = hasFocus ? S_highlight_outline : Phantom::outlineSwatch(option);
     Ph::PSave save(painter);
-    Ph::paintBorderedRoundRect(painter, r, rounding, swatch, pen, S_none);
+    Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, S_none);
     save.restore();
-    /*if (Ph::OverhangShadows && !hasFocus && isEnabled) {
-      // Imperfect when rounded, may leave a gap on left and right. Going
-      // closer would eat into the outline, though.
-      Ph::fillRectEdges(painter,
-                        r.adjusted(qRound(rounding / 2) + 1, 1,
-                                   -(qRound(rounding / 2) + 1), -1),
-                        Qt::TopEdge, 1, swatch.color(S_base_shadow));
-    }*/
     break;
   }
   case PE_PanelLineEdit: {
@@ -2029,12 +2023,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     }
     QRect r = option->rect;
     Ph::PSave save(painter);
-
-    bool lightTheme = option->palette.color(QPalette::Highlight).lightness() < option->palette.color(QPalette::Button).lightness();
-    Swatchy outline = lightTheme ? S_window_outline : S_button;
-    if (highlight) {
-        outline = S_highlight;
-    }
+    Swatchy outline = highlight ? S_highlight_outline : Phantom::outlineSwatch(option);
     Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill, true);
     break;
   }
