@@ -1,6 +1,6 @@
 QT += core gui widgets
 CONFIG += plugin
-TARGET = phantomstyleplugin
+TARGET = phantommodernstyleplugin
 TEMPLATE = lib
 
 DEFINES += QT_DEPRECATED_WARNINGS

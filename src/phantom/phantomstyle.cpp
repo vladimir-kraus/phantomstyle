@@ -1361,7 +1361,7 @@ Q_NEVER_INLINE void paintBorderedRoundRect(QPainter* p, QRect rect,
 PhantomStylePrivate::PhantomStylePrivate() : headSwatchFastKey(0) {}
 
 PhantomStyle::PhantomStyle() : d(new PhantomStylePrivate) {
-  setObjectName(QLatin1String("Phantom"));
+  setObjectName(QLatin1String("PhantomModern"));
 }
 
 PhantomStyle::~PhantomStyle() { delete d; }
@@ -1725,16 +1725,13 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     bool hasFocus = (option->state & State_HasFocus &&
                      option->state & State_KeyboardFocusChange);
     const qreal rounding = Ph::toolButtonRounding();
-    Swatchy outline = S_window_outline;
+    Swatchy outline = S_button;
     Swatchy fill = (hasFocus || isOn || isMouseOver) ? S_button : S_window;
-    Swatchy specular = S_button_specular;
     if (isDown) {
       fill = S_button_pressed;
-      specular = S_button_pressed_specular;
     } else if (isOn) {
       // kinda repurposing this, hmm
       fill = S_scrollbarGutter;
-      specular = S_none;
     }
     if (hasFocus) {
       outline = S_highlight_outline;
@@ -1742,8 +1739,6 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     QRect r = option->rect;
     Ph::PSave save(painter);
     Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill, true);
-    Ph::paintBorderedRoundRect(painter, r.adjusted(1, 1, -1, -1), rounding,
-                               swatch, specular, S_none);
     break;
   }
   case PE_IndicatorDockWidgetResizeHandle: {
