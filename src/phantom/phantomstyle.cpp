@@ -183,6 +183,12 @@ static qreal toolButtonRounding()
     return val.isValid() ? val.toReal() : ToolButton_Rounding;
 }
 
+static qreal lineEditRounding()
+{
+    QVariant val = qApp->property("PhantomStyle::Button_Rounding");
+    return val.isValid() ? val.toReal() : LineEdit_Rounding;
+}
+
 static qreal buttonGradient()
 {
     QVariant val = qApp->property("PhantomStyle::Button_Gradient");
@@ -1753,7 +1759,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
   }
   case PE_FrameLineEdit: {
     QRect r = option->rect;
-    const qreal rounding = Ph::LineEdit_Rounding;
+    const qreal rounding = Phantom::lineEditRounding();
     bool hasFocus = option->state & State_HasFocus;
     Swatchy outline = hasFocus ? S_highlight_outline : Phantom::outlineSwatch(option);
     Ph::PSave save(painter);
@@ -1761,17 +1767,28 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     save.restore();
     break;
   }
-  case PE_PanelLineEdit: {
+  case PE_PanelLineEdit: { // TODO
     auto panel = qstyleoption_cast<const QStyleOptionFrame*>(option);
     if (!panel)
       break;
+    qreal rounding = Phantom::lineEditRounding();
     Ph::PSave save(painter);
     // We intentionally don't inset the fill rect, even if the frame will paint
     // over the perimeter, because an inset with rounding enabled may cause
     // some miscolored separated pixels between the fill and the border, since
     // we're forced to paint them in two separate draw calls.
-    Ph::paintSolidRoundRect(painter, option->rect, Ph::LineEdit_Rounding,
-                            swatch, S_base);
+    Ph::paintSolidRoundRect(painter, option->rect, rounding, swatch, S_base);
+
+    // Line edit inside combo box should not have rounded right corners.
+    if (rounding > 0.0)
+    {
+        if (qobject_cast<const QComboBox*>(widget->parent()) != nullptr)
+        {
+            QRect rect = option->rect;
+            rect.setLeft(rect.right() - ceil(rounding));
+            Ph::paintSolidRoundRect(painter, rect, 0.0, swatch, S_base);
+        }
+    }
     save.restore();
     if (panel->lineWidth > 0)
       proxy()->drawPrimitive(PE_FrameLineEdit, option, painter, widget);
