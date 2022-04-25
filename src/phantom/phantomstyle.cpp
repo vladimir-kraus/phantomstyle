@@ -121,6 +121,8 @@ static const qreal ProgressBar_Rounding = 0.0;
 static const qreal GroupBox_Rounding = 0.0;
 static const qreal SliderGroove_Rounding = 2.0;
 static const qreal SliderHandle_Rounding = 0.0;
+static const qreal ScrollBar_SliderMinFontRatio = 2.0;
+static const qreal ScrollBar_ExtentFontRatio = 0.85;
 
 static const qreal CheckMark_WidthOfHeightScale = 0.8;
 static const qreal PushButton_HorizontalPaddingFontHeightRatio = 1.0 / 2.0;
@@ -3673,27 +3675,21 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
       } else {
         thumbFill = S_window;
       }
-      Qt::Edges edges;
-      QRect edgeRect = scrollBarSlider;
       QRect mainRect = scrollBarSlider;
+      mainRect.adjust(2, 2, -2, -2);
+      qreal radius;
       if (isHorizontal) {
-        edges = Qt::LeftEdge | Qt::TopEdge | Qt::RightEdge;
-        edgeRect.adjust(-1, 0, 1, 0);
+          radius = mainRect.height() / 2.0;
         mainRect.setY(mainRect.y() + 1);
       } else {
-        edgeRect.adjust(0, -1, 0, 1);
+          radius = mainRect.width() / 2.0;
         if (isLeftToRight) {
-          edges = Qt::LeftEdge | Qt::TopEdge | Qt::BottomEdge;
           mainRect.setX(mainRect.x() + 1);
         } else {
-          edges = Qt::TopEdge | Qt::BottomEdge | Qt::RightEdge;
           mainRect.setWidth(mainRect.width() - 1);
         }
       }
-      Swatchy outlineColor = Phantom::outlineSwatch(option);
-      Ph::fillRectEdges(painter, edgeRect, edges, 1,
-                        swatch.color(outlineColor));
-      painter->fillRect(mainRect, swatch.color(thumbFill));
+      Ph::paintSolidRoundRect(painter, mainRect, radius, swatch, thumbFill);
     }
     break;
   }
@@ -3956,16 +3952,12 @@ int PhantomStyle::pixelMetric(PixelMetric metric, const QStyleOption* option,
     break;
   case PM_DialogButtonsSeparator:
   case PM_ScrollBarSliderMin:
-    val = 26;
-    break;
+    return (int)((qreal)widget->fontMetrics().height() * Phantom::ScrollBar_SliderMinFontRatio);
   case PM_TitleBarHeight:
     val = 24;
     break;
   case PM_ScrollBarExtent:
-    // Classic Mac would have an extent of 15 (14 visible clickable, need +1 in
-    // Qt for frame), so we're 1px thinner.
-    val = 14;
-    break;
+    return (int)((qreal)widget->fontMetrics().height() * Phantom::ScrollBar_ExtentFontRatio);
   case PM_SliderThickness:
   case PM_SliderLength:
     val = 15;
