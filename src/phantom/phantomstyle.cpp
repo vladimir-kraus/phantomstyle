@@ -1436,9 +1436,8 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     }
 
     SwatchColor frameColor = (option->state & QStyle::State_HasFocus && widget->property("PhantomStyle::Focus_Frame").toBool())
-            ? S_highlight_outline : S_window_outline;
-    Ph::fillRectOutline(painter, option->rect, 1,
-                        swatch.color(frameColor));
+            ? S_highlight_outline : Phantom::outlineSwatch(option);
+    Ph::fillRectOutline(painter, option->rect, 1, swatch.color(frameColor));
     break;
   }
   case PE_FrameMenu: {
@@ -1598,8 +1597,9 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
       bgRect.setWidth(bgRect.width() - 1);
     }
     painter->fillRect(bgRect, swatch.color(S_window));
+    Swatchy outline = Phantom::outlineSwatch(option);
     Ph::fillRectEdges(painter, option->rect, edges, 1,
-                      swatch.color(S_window_outline));
+                      swatch.color(outline));
     break;
   }
   case PE_IndicatorArrowUp:
@@ -2296,8 +2296,9 @@ void PhantomStyle::drawControl(ControlElement element,
       isFloating = tb->isFloating();
     }
     if (isFloating) {
-      Ph::fillRectOutline(painter, option->rect, 1,
-                          swatch.color(S_window_outline));
+        Swatchy outlineColor = Phantom::outlineSwatch(option);
+        Ph::fillRectOutline(painter, option->rect, 1,
+                          swatch.color(outlineColor));
     }
     break;
   }
@@ -2449,7 +2450,8 @@ void PhantomStyle::drawControl(ControlElement element,
     }
     QRect bgRect = Ph::expandRect(rect, edges, -1);
     painter->fillRect(bgRect, swatch.color(S_window));
-    Ph::fillRectEdges(painter, rect, edges, 1, swatch.color(S_window_outline));
+    Swatchy outline = Phantom::outlineSwatch(option);
+    Ph::fillRectEdges(painter, rect, edges, 1, swatch.color(outline));
     break;
   }
   case CE_HeaderLabel: {
@@ -3118,17 +3120,18 @@ void PhantomStyle::drawControl(ControlElement element,
   case CE_ShapedFrame: {
     auto frameopt = qstyleoption_cast<const QStyleOptionFrame*>(option);
     if (frameopt) {
+      Swatchy outlineColor = Phantom::outlineSwatch(option);
       if (frameopt->frameShape == QFrame::HLine) {
         QRect r = option->rect;
         r.setY(r.y() + r.height() / 2);
         r.setHeight(1);
-        painter->fillRect(r, swatch.color(S_window_outline));
+        painter->fillRect(r, swatch.color(outlineColor));
         break;
       } else if (frameopt->frameShape == QFrame::VLine) {
         QRect r = option->rect;
         r.setX(r.x() + r.width() / 2);
         r.setWidth(1);
-        painter->fillRect(r, swatch.color(S_window_outline));
+        painter->fillRect(r, swatch.color(outlineColor));
         break;
       }
     }
@@ -3651,9 +3654,10 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
       }
       Swatchy grooveColor =
           isEnabled ? S_scrollbarGutter : S_scrollbarGutter_disabled;
+      Swatchy outlineColor = Phantom::outlineSwatch(option);
       // Top or left dark edge
       Ph::fillRectEdges(painter, scrollBarGroove, edges, 1,
-                        swatch.color(S_window_outline));
+                        swatch.color(outlineColor));
 
       // General BG fill
       painter->fillRect(r, swatch.color(grooveColor));
@@ -3686,8 +3690,9 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
           mainRect.setWidth(mainRect.width() - 1);
         }
       }
+      Swatchy outlineColor = Phantom::outlineSwatch(option);
       Ph::fillRectEdges(painter, edgeRect, edges, 1,
-                        swatch.color(S_window_outline));
+                        swatch.color(outlineColor));
       painter->fillRect(mainRect, swatch.color(thumbFill));
     }
     break;
