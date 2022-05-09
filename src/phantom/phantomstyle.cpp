@@ -1386,7 +1386,7 @@ void PhantomStyle::drawItemText(QPainter* painter, const QRect& rect,
                                 int alignment, const QPalette& pal,
                                 bool enabled, const QString& text,
                                 QPalette::ColorRole textRole) const {
-  Q_UNUSED(enabled);
+  Q_UNUSED(enabled)
   if (text.isEmpty())
     return;
   if (textRole == QPalette::NoRole) {
@@ -2123,13 +2123,11 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
   case Phantom_PE_ScrollBarSliderVertical: {
     bool isLeftToRight = option->direction != Qt::RightToLeft;
     bool isSunken = option->state & State_Sunken;
-    Swatchy thumbFill, thumbSpecular;
+    Swatchy thumbFill;
     if (isSunken) {
       thumbFill = S_button_pressed;
-      thumbSpecular = S_button_pressed_specular;
     } else {
       thumbFill = S_button;
-      thumbSpecular = S_button_specular;
     }
     Qt::Edges edges;
     QRect edgeRect = option->rect;
@@ -2142,10 +2140,9 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
       edges = Qt::TopEdge | Qt::BottomEdge | Qt::RightEdge;
       mainRect.setWidth(mainRect.width() - 1);
     }
-    Ph::fillRectEdges(painter, edgeRect, edges, 1,
-                      swatch.color(S_window_outline));
+    Ph::fillRectEdges(painter, edgeRect, edges, 1, swatch.color(S_window_outline));
     painter->fillRect(mainRect, swatch.color(thumbFill));
-    Ph::fillRectOutline(painter, mainRect, 1, swatch.color(thumbSpecular));
+    Ph::fillRectOutline(painter, mainRect, 1, swatch.color(S_window_outline));
     break;
   }
   case Phantom_PE_WindowFrameColor: {
@@ -2451,7 +2448,8 @@ void PhantomStyle::drawControl(ControlElement element,
       }
     }
     QRect bgRect = Ph::expandRect(rect, edges, -1);
-    painter->fillRect(bgRect, swatch.color(S_window));
+    auto brush = buttonBrush(swatch, S_window, true);
+    painter->fillRect(bgRect, brush);
     Swatchy outline = Phantom::outlineSwatch(option);
     Ph::fillRectEdges(painter, rect, edges, 1, swatch.color(outline));
     break;
@@ -3689,7 +3687,7 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
           mainRect.setWidth(mainRect.width() - 1);
         }
       }
-      Ph::paintSolidRoundRect(painter, mainRect, radius, swatch, thumbFill);
+      Ph::paintBorderedRoundRect(painter, mainRect, radius, swatch, Ph::outlineSwatch(option), thumbFill);
     }
     break;
   }
