@@ -122,7 +122,7 @@ static const qreal GroupBox_Rounding = 0.0;
 static const qreal SliderGroove_Rounding = 2.0;
 static const qreal SliderHandle_Rounding = 0.0;
 static const qreal ScrollBar_SliderMinFontRatio = 2.0;
-static const qreal ScrollBar_ExtentFontRatio = 0.67;
+static const qreal ScrollBar_ExtentFontRatio = 0.75;
 
 static const qreal CheckMark_WidthOfHeightScale = 0.8;
 static const qreal PushButton_HorizontalPaddingFontHeightRatio = 1.0 / 2.0;
