@@ -1337,10 +1337,12 @@ Q_NEVER_INLINE void paintSolidRoundRect(QPainter* p, QRect rect, qreal radius,
     p->fillRect(rect, swatch.color(fill));
   }
 }
+
 Q_NEVER_INLINE void paintBorderedRoundRect(QPainter* p, QRect rect,
                                            qreal radius, const PhSwatch& swatch,
                                            Swatchy stroke, Swatchy fill,
-                                           bool enableGradient = false) {
+                                           bool enableGradient = false)
+{
   if (rect.width() < 1 || rect.height() < 1)
     return;
   if (!stroke && !fill)
@@ -1364,6 +1366,48 @@ Q_NEVER_INLINE void paintBorderedRoundRect(QPainter* p, QRect rect,
       p->fillRect(rect.adjusted(1, 1, -1, -1), buttonBrush(swatch, fill, enableGradient));
     }
   }
+}
+
+Q_NEVER_INLINE void paintAngledRect(QPainter* p, QRect rect, qreal leftAngleDisplacement, qreal rightAngleDisplacement,
+                                   qreal radius, const PhSwatch& swatch,
+                                   Swatchy stroke, Swatchy fill,
+                                   bool enableGradient = false)
+{
+  if (rect.width() < 1 || rect.height() < 1)
+    return;
+  if (!stroke && !fill)
+    return;
+
+  p->setRenderHint(QPainter::Antialiasing);
+  QPainterPath path;
+  auto x = (qreal)rect.x() + 0.5;
+  auto y = (qreal)rect.y() + 0.5;
+  auto w = (qreal)rect.width() - 1.0;
+  auto h = (qreal)rect.height() - 1.0;
+
+  path.moveTo(x + w - rightAngleDisplacement, y);
+  path.lineTo(x + w, y + h / 2.0 - 1.0);
+  path.lineTo(x + w, y + h / 2.0 + 1.0);
+  path.lineTo(x + w - rightAngleDisplacement, y + h);
+  if (leftAngleDisplacement == 0.0)
+  {
+      path.lineTo(x + radius, y + h);
+      path.arcTo(x, y + h - radius, radius, radius, 270.0, -90.0);
+      path.lineTo(x, y + radius);
+      path.arcTo(x, y, radius, radius, 180.0, -90.0);
+  }
+  else
+  {
+      path.lineTo(x, y + h);
+      path.lineTo(x + leftAngleDisplacement, y + h / 2.0 + 1.0);
+      path.lineTo(x + leftAngleDisplacement, y + h / 2.0 - 1.0);
+      path.lineTo(x, y);
+  }
+  path.lineTo(x + w - rightAngleDisplacement, y);
+
+  p->setPen(swatch.pen(stroke));
+  p->setBrush(buttonBrush(swatch, fill, enableGradient));
+  p->drawPath(path);
 }
 } // namespace
 } // namespace Phantom
@@ -2041,8 +2085,17 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     }
     QRect r = option->rect;
     Ph::PSave save(painter);
+    int leftAngleDisplacement = option->styleObject->property("left-angle-displacement").toInt();
+    int rightAngleDisplacement = option->styleObject->property("right-angle-displacement").toInt();
     Swatchy outline = highlight ? S_highlight_outline : Phantom::outlineSwatch(option);
-    Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill, true);
+    if (leftAngleDisplacement != 0 || rightAngleDisplacement != 0)
+    {
+        Ph::paintAngledRect(painter, r, leftAngleDisplacement, rightAngleDisplacement, rounding * 2, swatch, outline, fill, true);
+    }
+    else
+    {
+        Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill, true);
+    }
     break;
   }
   case PE_FrameTabWidget: {
