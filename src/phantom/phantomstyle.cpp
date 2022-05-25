@@ -114,6 +114,7 @@ enum {
 static const qreal TabBarTab_Rounding = 0.0;
 static const qreal SpinBox_Rounding = 0.0;
 static const qreal LineEdit_Rounding = 0.0;
+static const qreal AngledButton_Displacement = 5.0;
 static const qreal FrameFocusRect_Rounding = 1.0;
 static const qreal PushButton_Rounding = 2.0;
 static const qreal ToolButton_Rounding = 1.25;
@@ -189,6 +190,12 @@ static qreal lineEditRounding()
 {
     QVariant val = qApp->property("PhantomStyle::Button_Rounding");
     return val.isValid() ? val.toReal() : LineEdit_Rounding;
+}
+
+static qreal angledButtonDisplacement()
+{
+    QVariant val = qApp->property("PhantomStyle::Angled_Button_Displacement");
+    return val.isValid() ? val.toReal() : AngledButton_Displacement;
 }
 
 static qreal buttonGradient()
@@ -1368,8 +1375,8 @@ Q_NEVER_INLINE void paintBorderedRoundRect(QPainter* p, QRect rect,
   }
 }
 
-Q_NEVER_INLINE void paintAngledRect(QPainter* p, QRect rect, qreal leftAngleDisplacement, qreal rightAngleDisplacement,
-                                   qreal radius, const PhSwatch& swatch,
+Q_NEVER_INLINE void paintAngledRect(QPainter* p, QRect rect, bool leftAngle, bool rightAngle,
+                                   qreal displacement, qreal radius, const PhSwatch& swatch,
                                    Swatchy stroke, Swatchy fill,
                                    bool enableGradient = false)
 {
@@ -1380,16 +1387,18 @@ Q_NEVER_INLINE void paintAngledRect(QPainter* p, QRect rect, qreal leftAngleDisp
 
   p->setRenderHint(QPainter::Antialiasing);
   QPainterPath path;
-  auto x = (qreal)rect.x() + 0.5;
-  auto y = (qreal)rect.y() + 0.5;
-  auto w = (qreal)rect.width() - 1.0;
-  auto h = (qreal)rect.height() - 1.0;
+  qreal x = (qreal)rect.x() + 0.5;
+  qreal y = (qreal)rect.y() + 0.5;
+  qreal w = (qreal)rect.width() - 1.0;
+  qreal h = (qreal)rect.height() - 1.0;
+  qreal leftDisplacement = displacement * (int)leftAngle;
+  qreal rightDisplacement = displacement * (int)rightAngle;
 
-  path.moveTo(x + w - rightAngleDisplacement, y);
+  path.moveTo(x + w - rightDisplacement, y);
   path.lineTo(x + w, y + h / 2.0 - 1.0);
   path.lineTo(x + w, y + h / 2.0 + 1.0);
-  path.lineTo(x + w - rightAngleDisplacement, y + h);
-  if (leftAngleDisplacement == 0.0)
+  path.lineTo(x + w - rightDisplacement, y + h);
+  if (leftDisplacement == 0.0)
   {
       path.lineTo(x + radius, y + h);
       path.arcTo(x, y + h - radius, radius, radius, 270.0, -90.0);
@@ -1399,11 +1408,11 @@ Q_NEVER_INLINE void paintAngledRect(QPainter* p, QRect rect, qreal leftAngleDisp
   else
   {
       path.lineTo(x, y + h);
-      path.lineTo(x + leftAngleDisplacement, y + h / 2.0 + 1.0);
-      path.lineTo(x + leftAngleDisplacement, y + h / 2.0 - 1.0);
+      path.lineTo(x + leftDisplacement, y + h / 2.0 + 1.0);
+      path.lineTo(x + leftDisplacement, y + h / 2.0 - 1.0);
       path.lineTo(x, y);
   }
-  path.lineTo(x + w - rightAngleDisplacement, y);
+  path.lineTo(x + w - rightDisplacement, y);
 
   p->setPen(swatch.pen(stroke));
   p->setBrush(buttonBrush(swatch, fill, enableGradient));
@@ -2085,12 +2094,12 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     }
     QRect r = option->rect;
     Ph::PSave save(painter);
-    int leftAngleDisplacement = option->styleObject->property("left-angle-displacement").toInt();
-    int rightAngleDisplacement = option->styleObject->property("right-angle-displacement").toInt();
+    bool leftAngle = option->styleObject->property("left-angle").toBool();
+    bool rightAngle = option->styleObject->property("right-angle").toBool();
     Swatchy outline = highlight ? S_highlight_outline : Phantom::outlineSwatch(option);
-    if (leftAngleDisplacement != 0 || rightAngleDisplacement != 0)
+    if (leftAngle || rightAngle)
     {
-        Ph::paintAngledRect(painter, r, leftAngleDisplacement, rightAngleDisplacement, rounding * 2, swatch, outline, fill, true);
+        Ph::paintAngledRect(painter, r, leftAngle, rightAngle, Ph::angledButtonDisplacement(), rounding * 2, swatch, outline, fill, true);
     }
     else
     {
