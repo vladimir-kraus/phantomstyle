@@ -4539,6 +4539,10 @@ QRect PhantomStyle::subControlRect(ComplexControl control,
           case QStyle::SC_ScrollBarGroove:
             return option->rect;
           case QStyle::SC_ScrollBarSlider:
+            Q_FALLTHROUGH();
+          case QStyle::SC_ScrollBarAddPage:
+            Q_FALLTHROUGH();
+          case QStyle::SC_ScrollBarSubPage:
             if (const QStyleOptionSlider *scrollbar = qstyleoption_cast<const QStyleOptionSlider *>(option)) {
                 const QRect scrollBarRect = scrollbar->rect;
                 int sbextent = 0;
@@ -4563,9 +4567,48 @@ QRect PhantomStyle::subControlRect(ComplexControl control,
                                                                      maxlen - sliderlen,
                                                                      scrollbar->upsideDown);
                 if (scrollbar->orientation == Qt::Horizontal)
-                    return QRect(sliderstart, 0, sliderlen, scrollBarRect.height());
+                {
+                    switch (subControl)
+                    {
+                    case QStyle::SC_ScrollBarSlider:
+                    {
+                        return QRect(sliderstart, 0, sliderlen, scrollBarRect.height());
+                    }
+                    case QStyle::SC_ScrollBarSubPage:
+                    {
+                        return QRect(0, 0, sliderstart, scrollBarRect.height());
+                    }
+                    case QStyle::SC_ScrollBarAddPage:
+                    {
+                        int x = sliderstart + sliderlen;
+                        return QRect(x, 0, scrollBarRect.width() - x, scrollBarRect.height());
+                    }
+                    default:
+                        Q_UNREACHABLE();
+                    }
+                }
                 else
-                    return QRect(0, sliderstart, scrollBarRect.width(), sliderlen);
+                {
+                    switch (subControl)
+                    {
+                    case QStyle::SC_ScrollBarSlider:
+                    {
+                        return QRect(0, sliderstart, scrollBarRect.width(), sliderlen);
+                    }
+                    case QStyle::SC_ScrollBarSubPage:
+                    {
+                        return QRect(0, 0, scrollBarRect.width(), sliderstart);
+                    }
+                    case QStyle::SC_ScrollBarAddPage:
+                    {
+                        int y = sliderstart + sliderlen;
+                        return QRect(0, y, scrollBarRect.height(), scrollBarRect.height() - y);
+                    }
+                    default:
+                        Q_UNREACHABLE();
+                    }
+
+                }
             }
             break;
           default:
