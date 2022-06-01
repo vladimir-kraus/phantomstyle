@@ -1860,8 +1860,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     bool isFlat = checkbox->features & QStyleOptionButton::Flat;
     bool isEnabled = option->state & State_Enabled;
     bool isPressed = state & State_Sunken;
-    Swatchy outlineColor =
-        isHighlighted ? S_highlight_outline : S_window_outline;
+    Swatchy outlineColor = isHighlighted ? S_highlight_outline : Phantom::outlineSwatch(option);
     Swatchy bgFillColor = isPressed ? S_highlight : S_base;
     Swatchy fgColor = isFlat ? S_windowText : S_text;
     if (isPressed && !isFlat) {
