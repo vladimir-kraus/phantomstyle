@@ -118,7 +118,7 @@ static const qreal AngledButton_Displacement = 5.0;
 static const qreal FrameFocusRect_Rounding = 1.0;
 static const qreal PushButton_Rounding = 2.0;
 static const qreal ToolButton_Rounding = 1.25;
-static const qreal ProgressBar_Rounding = 0.0;
+static const qreal ProgressBar_Rounding = 2.0;
 static const qreal GroupBox_Rounding = 0.0;
 static const qreal SliderGroove_Rounding = 2.0;
 static const qreal SliderHandle_Rounding = 0.0;
@@ -2605,7 +2605,7 @@ void PhantomStyle::drawControl(ControlElement element,
     QRect rect = option->rect;
     Ph::PSave save(painter);
     Ph::paintBorderedRoundRect(painter, rect, rounding, swatch,
-                               S_window_outline, S_base);
+                               Ph::outlineSwatch(option), S_base);
     save.restore();
     if (Ph::OverhangShadows && option->state & State_Enabled) {
       // Inner shadow
@@ -2629,11 +2629,8 @@ void PhantomStyle::drawControl(ControlElement element,
     Ph::progressBarFillRects(bar, filled, nonFilled, isIndeterminate);
     if (isIndeterminate || bar->progress > bar->minimum) {
       Ph::PSave save(painter);
-      Ph::paintBorderedRoundRect(painter, filled, rounding, swatch,
-                                 S_progressBar_outline, S_progressBar);
-      Ph::paintBorderedRoundRect(painter, filled.adjusted(1, 1, -1, -1),
-                                 rounding, swatch, S_progressBar_specular,
-                                 S_none);
+      filled.adjust(1, 1, -1, -1);
+      Ph::paintSolidRoundRect(painter, filled, rounding, swatch, S_progressBar);
       if (isIndeterminate) {
         // TODO paint indeterminate indicator
 #if QT_CONFIG(animation)
