@@ -315,7 +315,6 @@ enum SwatchColor {
   S_highlightedText,
   S_scrollbarGutter,
   S_window_outline,
-  S_window_specular,
   S_window_divider,
   S_window_lighter,
   S_window_darker,
@@ -342,7 +341,6 @@ enum SwatchColor {
   S_progressBar = S_highlight,
   S_progressBar_specular = S_highlight_specular,
   S_tabFrame = S_window,
-  S_tabFrame_specular = S_window_specular,
 };
 }
 
@@ -416,8 +414,6 @@ Q_NEVER_INLINE void PhSwatch::loadFromQPalette(const QPalette& pal) {
   // rid of conditional color branching and try to do it some other way.
   colors[S_window_outline] =
       Dc::adjustLightness(colors[S_window], isEnabled ? -0.1 : -0.07);
-  colors[S_window_specular] =
-      isEnabled ? Dc::specularOf(colors[S_window]) : colors[S_window];
   colors[S_window_divider] = Dc::dividerColor(colors[S_window]);
   colors[S_window_lighter] = Dc::lightShadeOf(colors[S_window]);
   colors[S_window_darker] = Dc::darkShadeOf(colors[S_window]);
@@ -1631,12 +1627,8 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
       edge = Qt::RightEdge;
       break;
     }
-    Ph::fillRectEdges(painter, option->rect, edge, 1,
-                      swatch.color(S_window_outline));
-    // TODO need to check here if we're drawing with window or button color as
-    // the frame fill. Assuming window right now, but could be wrong.
-    Ph::fillRectEdges(painter, Ph::expandRect(option->rect, edge, -1), edge, 1,
-                      swatch.color(S_tabFrame_specular));
+    auto outlineColor = swatch.color(Phantom::outlineSwatch(option));
+    Ph::fillRectEdges(painter, option->rect, edge, 1, outlineColor);
     break;
   }
 #endif // QT_CONFIG(tabbar)
@@ -2113,9 +2105,8 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     auto twf = qstyleoption_cast<const QStyleOptionTabWidgetFrame*>(option);
     if (!twf)
       break;
-    Ph::fillRectOutline(painter, option->rect, 1,
-                        swatch.color(S_window_outline));
-    Ph::fillRectOutline(painter, bgRect, 1, swatch.color(S_tabFrame_specular));
+    auto outlineColor = swatch.color(Phantom::outlineSwatch(option));
+    Ph::fillRectOutline(painter, option->rect, 1, outlineColor);
 #endif // QT_CONFIG(tabwidget)
     break;
   }
@@ -3101,34 +3092,25 @@ void PhantomStyle::drawControl(ControlElement element,
     painter->setClipRect(shapeClipRect);
     bool hasFrame =
         tab->features & QStyleOptionTab::HasFrame && !tab->documentMode;
-    Swatchy tabFrameColor, thisFillColor, specular;
+    Swatchy tabFrameColor, thisFillColor;
     if (hasFrame) {
       tabFrameColor = S_tabFrame;
       if (isSelected) {
         thisFillColor = S_tabFrame;
-        specular = S_tabFrame_specular;
       } else {
         thisFillColor = S_inactiveTabYesFrame;
-        specular = Ph::TabBar_InactiveTabsHaveSpecular
-                       ? S_inactiveTabYesFrame_specular
-                       : S_none;
       }
     } else {
       tabFrameColor = S_window;
       if (isSelected) {
         thisFillColor = S_window;
-        specular = S_window_specular;
       } else {
         thisFillColor = S_inactiveTabNoFrame;
-        specular = Ph::TabBar_InactiveTabsHaveSpecular
-                       ? S_inactiveTabNoFrame_specular
-                       : S_none;
       }
     }
+    auto outlineSwatch = Phantom::outlineSwatch(option);
     Ph::paintBorderedRoundRect(painter, drawRect, rounding, swatch,
-                               S_window_outline, thisFillColor);
-    Ph::paintBorderedRoundRect(painter, drawRect.adjusted(1, 1, -1, -1),
-                               rounding, swatch, specular, S_none);
+                               outlineSwatch, thisFillColor);
     painter->restore();
     if (isSelected) {
       QRect refillRect =
@@ -3137,9 +3119,6 @@ void PhantomStyle::drawControl(ControlElement element,
       refillRect =
           Ph::expandRect(refillRect, edgeAwayNextTab | edgeTowardNextTab, -1);
       painter->fillRect(refillRect, swatch.color(tabFrameColor));
-      Ph::fillRectEdges(painter, refillRect,
-                        edgeAwayNextTab | edgeTowardNextTab, 1,
-                        swatch.color(specular));
     }
     break;
   }
