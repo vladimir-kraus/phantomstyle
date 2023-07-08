@@ -151,7 +151,6 @@ static const qreal MenuItem_IconRightSpaceFontRatio = 1.0 / 3.0;
 
 static const bool BranchesOnEdge = false;
 static const bool OverhangShadows = false;
-static const bool IndicatorShadows = false;
 static const bool MenuExtraBottomMargin = true;
 static const bool MenuBarLeftMargin = false;
 static const bool AllowToolBarAutoRaise = true;
@@ -1867,11 +1866,6 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
       QRect fillR = r;
       Ph::fillRectOutline(painter, fillR, 1, swatch.color(outlineColor));
       fillR.adjust(1, 1, -1, -1);
-      if (Ph::IndicatorShadows && !isPressed && isEnabled) {
-        Ph::fillRectEdges(painter, fillR, Qt::TopEdge, 1,
-                          swatch.color(S_base_shadow));
-        fillR.adjust(0, 1, 0, 0);
-      }
       painter->fillRect(fillR, swatch.color(bgFillColor));
     }
     if (checkbox->state & State_NoChange) {
@@ -1907,22 +1901,11 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     QPointF circleCenter(rx + rw / 2.0, ry + rh / 2.0);
     const qreal lineThickness = 1.0;
     qreal outlineRadius = (qMin(rw, rh) - lineThickness) / 2.0;
-    qreal fillRadius = outlineRadius - lineThickness / 2.0;
     Ph::PSave save(painter);
     painter->setRenderHint(QPainter::Antialiasing);
     painter->setBrush(swatch.brush(bgFillColor));
     painter->setPen(swatch.pen(outlineColor));
     painter->drawEllipse(circleCenter, outlineRadius, outlineRadius);
-    if (Ph::IndicatorShadows && !isSunken && isEnabled) {
-      // Really slow, just a temp demo test
-      painter->setPen(Qt::NoPen);
-      painter->setBrush(swatch.brush(S_base_shadow));
-      QPainterPath path0, path1;
-      path0.addEllipse(circleCenter, fillRadius, fillRadius);
-      path1.addEllipse(circleCenter + QPointF(0, 1.25), fillRadius, fillRadius);
-      QPainterPath path2 = path0 - path1;
-      painter->drawPath(path2);
-    }
     if (state & State_On) {
       Swatchy fgColor = isSunken ? S_highlightedText : S_windowText;
       qreal checkmarkRadius = outlineRadius / 2.32;
