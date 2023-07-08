@@ -158,21 +158,6 @@ static const bool AllowToolBarAutoRaise = true;
 static const bool ShowItemViewDecorationSelected = false;
 static const bool ItemView_UseFontHeightForDecorationSize = true;
 
-// Whether or not the non-raised tabs in a tab bar have shininess/highlights to
-// them. Setting this to false adds an extra visual hint for distinguishing
-// between the current and non-current tabs, but makes the non-current tabs
-// appear less clickable. Other ways to increase the visual differences could
-// be to increase the color contrast for the background fill color, or increase
-// the vertical offset. However, increasing the vertical offset comes with some
-// layout challenges, and increasing the color contrast further may visually
-// imply an incorrect layout structure. Not sure what's best.
-//
-// This doesn't disable creating the color/brush resource, even though it's
-// currently a compile-time-only option, because it may be changed to be part
-// of some dynamic config system for Phantom in the future, or have a
-// per-widget style hint associated with it.
-static const bool TabBar_InactiveTabsHaveSpecular = false;
-
 static qreal pushButtonRounding()
 {
     QVariant val = qApp->property("PhantomStyle::Button_Rounding");
@@ -1849,7 +1834,6 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
                          option->state & State_KeyboardFocusChange;
     bool isSelected = option->state & State_Selected;
     bool isFlat = checkbox->features & QStyleOptionButton::Flat;
-    bool isEnabled = option->state & State_Enabled;
     bool isPressed = state & State_Sunken;
     Swatchy outlineColor = isHighlighted ? S_highlight_outline : Phantom::outlineSwatch(option);
     Swatchy bgFillColor = isPressed ? S_highlight : S_base;
@@ -1894,7 +1878,6 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     bool isHighlighted = option->state & State_HasFocus &&
                          option->state & State_KeyboardFocusChange;
     bool isSunken = state & State_Sunken;
-    bool isEnabled = state & State_Enabled;
     Swatchy outlineColor =
         isHighlighted ? S_highlight_outline : S_window_outline;
     Swatchy bgFillColor = isSunken ? S_highlight : S_base;
@@ -3718,8 +3701,6 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
       break;
     painter->save();
     bool isLeftToRight = option->direction != Qt::RightToLeft;
-    bool hasFocus = option->state & State_HasFocus &&
-                    option->state & State_KeyboardFocusChange;
     bool isSunken = comboBox->state & State_Sunken;
     QRect rect = comboBox->rect;
     QRect downArrowRect = proxy()->subControlRect(CC_ComboBox, comboBox,
