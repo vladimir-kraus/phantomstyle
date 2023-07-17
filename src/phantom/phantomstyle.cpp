@@ -2687,8 +2687,7 @@ void PhantomStyle::drawControl(ControlElement element,
     if (Phantom::hasTweakTrue(widget, Phantom::Tweak::menubar_no_ruler))
       break;
     if (!isSelected) {
-      Ph::fillRectEdges(painter, r, Qt::BottomEdge, 1,
-                        swatch.color(S_window_divider));
+      Ph::fillRectEdges(painter, r, Qt::BottomEdge, 1, swatch.color(Phantom::outlineSwatch(option)));
     }
     break;
   }
