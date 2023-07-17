@@ -299,7 +299,6 @@ enum SwatchColor {
   S_highlightedText,
   S_scrollbarGutter,
   S_window_outline,
-  S_window_divider,
   S_window_lighter,
   S_window_darker,
   S_button_specular,
@@ -398,7 +397,6 @@ Q_NEVER_INLINE void PhSwatch::loadFromQPalette(const QPalette& pal) {
   // rid of conditional color branching and try to do it some other way.
   colors[S_window_outline] =
       Dc::adjustLightness(colors[S_window], isEnabled ? -0.1 : -0.07);
-  colors[S_window_divider] = Dc::dividerColor(colors[S_window]);
   colors[S_window_lighter] = Dc::lightShadeOf(colors[S_window]);
   colors[S_window_darker] = Dc::darkShadeOf(colors[S_window]);
   colors[S_button_specular] =
@@ -1508,10 +1506,10 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     }
     if (isFlat) {
       Ph::fillRectEdges(painter, frame, Qt::TopEdge, 1,
-                        swatch.color(S_window_divider));
+                        swatch.color(Phantom::outlineSwatch(option)));
     } else {
       Ph::paintBorderedRoundRect(painter, frame, Ph::GroupBox_Rounding, swatch,
-                                 S_window_divider, S_none);
+                                 Phantom::outlineSwatch(option), S_none);
     }
     break;
   }
@@ -1743,7 +1741,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
         r.adjust(0, 3, 0, -3);
       r.setWidth(r.width() / 2 + 1);
       Ph::fillRectEdges(painter, r, Qt::RightEdge, 1,
-                        swatch.color(S_window_divider));
+                        swatch.color(Phantom::outlineSwatch(option)));
     } else {
       // TODO replace with new code
       const int margin = 6;
@@ -1921,7 +1919,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
         int x_ = x + col * 2 * dotLen;
         int y_ = y + row * 2 * dotLen;
         painter->fillRect(x_, y_, dotLen, dotLen,
-                          swatch.color(S_window_divider));
+                          swatch.color(Phantom::outlineSwatch(option)));
       }
     }
     break;
@@ -2136,7 +2134,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     //   isBelowMenuBar = true;
     // }
     Ph::fillRectOutline(painter, option->rect, 1,
-                        swatch.color(S_window_divider));
+                        swatch.color(Phantom::outlineSwatch(option)));
     QRect bgRect = option->rect.adjusted(1, isBelowMenuBar ? 0 : 1, -1, -1);
     painter->fillRect(bgRect, swatch.color(S_window));
     break;
@@ -2255,7 +2253,7 @@ void PhantomStyle::drawControl(ControlElement element,
         QStyle::alignedRect(option->direction, Qt::AlignCenter, size, r);
     painter->fillRect(filledRect, swatch.color(S_button_specular));
     Ph::fillRectOutline(painter, filledRect.adjusted(-1, 0, 1, 0), 1,
-                        swatch.color(S_window_divider));
+                        swatch.color(Phantom::outlineSwatch(option)));
     break;
   }
 #endif // QT_CONFIG(splitter)
@@ -2710,7 +2708,7 @@ void PhantomStyle::drawControl(ControlElement element,
       QRect r = option->rect;
       r.setHeight(r.height() / 2 + 1);
       Ph::fillRectEdges(painter, r, Qt::BottomEdge, 1,
-                        swatch.color(S_window_divider));
+                        swatch.color(Phantom::outlineSwatch(option)));
       break;
     }
     const QRect itemRect = option->rect;
