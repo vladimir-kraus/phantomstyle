@@ -87,12 +87,13 @@ QT_END_NAMESPACE
 
 namespace Phantom {
 namespace Tweak {
-const char* const menubar_no_ruler = "_phantom_menubar_no_ruler";
 const char* const button_rounding = "_phantom_button_rounding";
 const char* const button_gradient = "_phantom_button_gradient";
-const char* const button_angled_displacement = "_button_angled_displacement";
-const char* const combobox_use_qmenu_popup = "_combobox_use_qmenu_popup";
-const char* const toolbutton_hover_effect = "_toolbutton_hover_effect";
+const char* const button_angled_displacement = "_phantom_button_angled_displacement";
+const char* const combobox_use_qmenu_popup = "_phantom_combobox_qmenu_popup";
+const char* const menubar_no_ruler = "_phantom_menubar_no_ruler";
+const char* const toolbutton_hover_effect = "_phantom_toolbutton_hover_effect";
+const char* const widget_has_focus_frame = "_phantom_widget_focus_frame";
 }
 namespace {
 
@@ -209,6 +210,13 @@ static bool toolButtonHoverEffect()
     // Note: in order to work, tool buttons need to have attribute WA_Hover set ON.
     QVariant val = tweakValue(qApp, Tweak::toolbutton_hover_effect);
     return val.isValid() ? val.toBool() : true;
+}
+
+static bool widgetHasFocusFrame(const QWidget *widget)
+{
+    // Note: in order to work, tool buttons need to have attribute WA_Hover set ON.
+    QVariant val = tweakValue(widget, Tweak::widget_has_focus_frame);
+    return val.isValid() ? val.toBool() : false;
 }
 
 struct Grad {
@@ -1478,7 +1486,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
       break;
     }
 
-    SwatchColor frameColor = (option->state & QStyle::State_HasFocus && widget->property("PhantomStyle::Focus_Frame").toBool())
+    SwatchColor frameColor = (option->state & QStyle::State_HasFocus && Phantom::widgetHasFocusFrame(widget))
             ? S_highlight_outline : Phantom::outlineSwatch(option);
     Ph::fillRectOutline(painter, option->rect, 1, swatch.color(frameColor));
     break;

@@ -25,6 +25,7 @@ extern const char* const button_angled_displacement;
 extern const char* const combobox_use_qmenu_popup;
 extern const char* const menubar_no_ruler;
 extern const char* const toolbutton_hover_effect;
+extern const char* const widget_has_focus_frame;
 
 } // namespace Tweak
 } // namespace Phantom
