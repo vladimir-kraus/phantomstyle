@@ -2999,8 +2999,7 @@ void PhantomStyle::drawControl(ControlElement element,
     if (Phantom::hasTweakTrue(widget, Phantom::Tweak::menubar_no_ruler))
       break;
     QRect rect = option->rect;
-    Ph::fillRectEdges(painter, rect, Qt::BottomEdge, 1,
-                      swatch.color(S_window_divider));
+    Ph::fillRectEdges(painter, rect, Qt::BottomEdge, 1, swatch.color(Phantom::outlineSwatch(option)));
     painter->fillRect(rect.adjusted(0, 0, 0, -1), swatch.color(S_window));
     break;
   }
