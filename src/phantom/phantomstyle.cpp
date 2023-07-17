@@ -94,6 +94,7 @@ const char* const combobox_use_qmenu_popup = "_phantom_combobox_qmenu_popup";
 const char* const menubar_no_ruler = "_phantom_menubar_no_ruler";
 const char* const toolbutton_hover_effect = "_phantom_toolbutton_hover_effect";
 const char* const widget_has_focus_frame = "_phantom_widget_focus_frame";
+const char* const widget_has_rounded_frame = "_phantom_widget_rounded_frame";
 }
 namespace {
 
@@ -1485,10 +1486,20 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
       proxy()->drawPrimitive(PE_PanelMenu, &copy, painter, widget);
       break;
     }
-
     SwatchColor frameColor = (option->state & QStyle::State_HasFocus && Phantom::widgetHasFocusFrame(widget))
             ? S_highlight_outline : Phantom::outlineSwatch(option);
-    Ph::fillRectOutline(painter, option->rect, 1, swatch.color(frameColor));
+    if (Phantom::hasTweak(widget, Phantom::Tweak::widget_has_rounded_frame))
+    {
+      // TODO: Hack! Here we are also painting the base background.
+      // This is not general enough. But this seems to be the only way to
+      // achieve QPainTextEdit with rounded corners.
+      const qreal rounding = Phantom::lineEditRounding();
+      Ph::paintBorderedRoundRect(painter, option->rect, rounding, swatch, frameColor, S_base);
+    }
+    else
+    {
+      Ph::fillRectOutline(painter, option->rect, 1, swatch.color(frameColor));
+    }
     break;
   }
   case PE_FrameMenu: {
