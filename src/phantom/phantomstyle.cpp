@@ -88,14 +88,24 @@ QT_END_NAMESPACE
 namespace Phantom {
 namespace Tweak {
 const char* const menubar_no_ruler = "_phantom_menubar_no_ruler";
+const char* const button_rounding = "_phantom_button_rounding";
+const char* const button_gradient = "_phantom_button_gradient";
+const char* const button_angled_displacement = "_button_angled_displacement";
+const char* const combobox_use_qmenu_popup = "_combobox_use_qmenu_popup";
+const char* const toolbutton_hover_effect = "_toolbutton_hover_effect";
 }
 namespace {
-Q_NEVER_INLINE bool hasTweakTrue(const QObject* object, const char* tweakName) {
+
+Q_NEVER_INLINE QVariant tweakValue(const QObject* object, const char* tweakName) {
   if (!object)
-    return false;
-  QVariant value = object->property(tweakName);
-  return value.toBool();
+    return {};
+  return object->property(tweakName);
 }
+
+Q_NEVER_INLINE bool hasTweak(const QObject* object, const char* tweakName) {
+  return tweakValue(object, tweakName).toBool();
+}
+
 } // namespace
 } // namespace Phantom
 
@@ -160,44 +170,44 @@ static const bool ItemView_UseFontHeightForDecorationSize = true;
 
 static qreal pushButtonRounding()
 {
-    QVariant val = qApp->property("PhantomStyle::Button_Rounding");
-    return val.isValid() ? val.toReal() : PushButton_Rounding;
+  QVariant val = tweakValue(qApp, Tweak::button_rounding);
+  return val.isValid() ? val.toReal() : PushButton_Rounding;
 }
 
 static qreal toolButtonRounding()
 {
-    QVariant val = qApp->property("PhantomStyle::Button_Rounding");
-    return val.isValid() ? val.toReal() : ToolButton_Rounding;
+  QVariant val = tweakValue(qApp, Tweak::button_rounding);
+  return val.isValid() ? val.toReal() : ToolButton_Rounding;
 }
 
 static qreal lineEditRounding()
 {
-    QVariant val = qApp->property("PhantomStyle::Button_Rounding");
-    return val.isValid() ? val.toReal() : LineEdit_Rounding;
+  QVariant val = tweakValue(qApp, Tweak::button_rounding);
+  return val.isValid() ? val.toReal() : LineEdit_Rounding;
 }
 
 static qreal angledButtonDisplacement()
 {
-    QVariant val = qApp->property("PhantomStyle::Angled_Button_Displacement");
+    QVariant val = tweakValue(qApp, Tweak::button_angled_displacement);
     return val.isValid() ? val.toReal() : AngledButton_Displacement;
 }
 
 static qreal buttonGradient()
 {
-    QVariant val = qApp->property("PhantomStyle::Button_Gradient");
-    return val.isValid() ? val.toReal() : 0.0;
+  QVariant val = tweakValue(qApp, Tweak::button_gradient);
+  return val.isValid() ? val.toReal() : 0.0;
 }
 
 static bool useQMenuForComboBoxPopup()
 {
-    QVariant val = qApp->property("PhantomStyle::UseQMenuForComboBoxPopup");
+    QVariant val = tweakValue(qApp, Tweak::combobox_use_qmenu_popup);
     return val.isValid() ? val.toBool() : true;
 }
 
 static bool toolButtonHoverEffect()
 {
     // Note: in order to work, tool buttons need to have attribute WA_Hover set ON.
-    QVariant val = qApp->property("PhantomStyle::ToolButtonHoverEffect");
+    QVariant val = tweakValue(qApp, Tweak::toolbutton_hover_effect);
     return val.isValid() ? val.toBool() : true;
 }
 
@@ -2682,7 +2692,7 @@ void PhantomStyle::drawControl(ControlElement element,
                           mbi->state & State_Enabled, mbi->text, textRole);
     if (isSelected)
       break;
-    if (Phantom::hasTweakTrue(widget, Phantom::Tweak::menubar_no_ruler))
+    if (Phantom::hasTweak(widget, Phantom::Tweak::menubar_no_ruler))
       break;
     if (!isSelected) {
       Ph::fillRectEdges(painter, r, Qt::BottomEdge, 1, swatch.color(Phantom::outlineSwatch(option)));
@@ -2993,7 +3003,7 @@ void PhantomStyle::drawControl(ControlElement element,
     break;
   }
   case CE_MenuBarEmptyArea: {
-    if (Phantom::hasTweakTrue(widget, Phantom::Tweak::menubar_no_ruler))
+    if (Phantom::hasTweak(widget, Phantom::Tweak::menubar_no_ruler))
       break;
     QRect rect = option->rect;
     Ph::fillRectEdges(painter, rect, Qt::BottomEdge, 1, swatch.color(Phantom::outlineSwatch(option)));

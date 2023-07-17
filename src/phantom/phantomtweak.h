@@ -19,7 +19,12 @@ namespace Tweak {
 //
 // The constant C string is provided for convenience, but you may also just use
 // a string literal in your own code, if you prefer.
+extern const char* const button_rounding;
+extern const char* const button_gradient;
+extern const char* const button_angled_displacement;
+extern const char* const combobox_use_qmenu_popup;
 extern const char* const menubar_no_ruler;
+extern const char* const toolbutton_hover_effect;
 
 } // namespace Tweak
 } // namespace Phantom
