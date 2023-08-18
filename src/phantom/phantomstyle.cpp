@@ -354,8 +354,8 @@ enum {
 
 static Swatchy outlineSwatch(const QStyleOption* option)
 {
-    bool lightTheme = option->palette.color(QPalette::Highlight).lightness() < option->palette.color(QPalette::Button).lightness();
-    return lightTheme ? SwatchColors::S_window_outline : SwatchColors::S_button;
+  Q_UNUSED(option);
+  return SwatchColors::S_window_outline;
 }
 
 struct PhSwatch : public QSharedData {
@@ -395,7 +395,10 @@ using PhSwatchCache = QVarLengthArray<PhCacheEntry, Num_ColorCacheEntries>;
 Q_NEVER_INLINE void PhSwatch::loadFromQPalette(const QPalette& pal) {
   using namespace SwatchColors;
   namespace Dc = DeriveColors;
+  const bool lightTheme = pal.color(QPalette::Window).lightness() > pal.color(QPalette::WindowText).lightness();
   const bool isEnabled = pal.currentColorGroup() != QPalette::Disabled;
+  int windowBrightness = pal.color(QPalette::Window).value();
+  int buttonBrightness = pal.color(QPalette::Window).value();
   QColor colors[Num_SwatchColors];
   colors[S_none] = QColor();
 
@@ -410,12 +413,29 @@ Q_NEVER_INLINE void PhSwatch::loadFromQPalette(const QPalette& pal) {
   colors[S_highlightedText] = pal.color(QPalette::HighlightedText);
   colors[S_scrollbarGutter] = Dc::gutterColorOf(pal);
 
-  // There's a chance that some widgets won't redraw when changing to and from
-  // the disabled state, causing the outline color in the frame buffer to be
-  // out of sync with what it should be. If we notice this problem, we can get
-  // rid of conditional color branching and try to do it some other way.
-  colors[S_window_outline] =
-      Dc::adjustLightness(colors[S_window], isEnabled ? -0.1 : -0.07);
+  {
+    int brightness;
+    if (lightTheme)
+    {
+      brightness = windowBrightness - 35;
+      brightness = qMin(brightness, buttonBrightness - 15);
+      brightness = qMin(brightness, 255 - 45);
+    }
+    else
+    {
+      brightness = windowBrightness + 35;
+      brightness = qMax(brightness, buttonBrightness + 15);
+      brightness = qMax(brightness, 45);
+    }
+    QColor hsv = colors[S_window].toHsv();
+    int hue = hsv.hue();
+    int saturation = hsv.hsvSaturation() - 15;
+    saturation = qBound(0, saturation, 255);
+    brightness = qBound(0, brightness, 255);
+    hsv.setHsv(hue, saturation, brightness);
+    colors[S_window_outline] = hsv.toRgb();
+  }
+
   colors[S_window_lighter] = Dc::lightShadeOf(colors[S_window]);
   colors[S_window_darker] = Dc::darkShadeOf(colors[S_window]);
   colors[S_button_specular] =
