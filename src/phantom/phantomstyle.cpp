@@ -323,6 +323,8 @@ enum SwatchColor {
   S_button_specular,
   S_button_pressed,
   S_button_pressed_specular,
+  S_button_hovered,
+  S_button_highlight_hovered,
   S_base_shadow,
   S_base_divider,
   S_windowText_disabled,
@@ -398,14 +400,41 @@ Q_NEVER_INLINE void PhSwatch::loadFromQPalette(const QPalette& pal) {
   const bool lightTheme = pal.color(QPalette::Window).lightness() > pal.color(QPalette::WindowText).lightness();
   const bool isEnabled = pal.currentColorGroup() != QPalette::Disabled;
   int windowBrightness = pal.color(QPalette::Window).value();
-  int buttonBrightness = pal.color(QPalette::Window).value();
+  int buttonBrightness = pal.color(QPalette::Button).value();
   QColor colors[Num_SwatchColors];
   colors[S_none] = QColor();
 
   colors[S_window] = pal.color(QPalette::Window);
   colors[S_button] = pal.color(QPalette::Button);
-  if (colors[S_button] == colors[S_window])
-    colors[S_button] = Dc::adjustLightness(colors[S_button], 0.01);
+
+  {
+    int h1, s1, v1;
+    colors[S_window].getHsv(&h1, &s1, &v1);
+    int h2, s2, v2;
+    colors[S_button].getHsv(&h2, &s2, &v2);
+    h1 += h2;
+    s1 += s2;
+    v1 += v2;
+    colors[S_button_hovered] = QColor::fromHsv(h1 / 2, s1 / 2, v1 / 2);
+  }
+
+  {
+    QColor hsv = colors[S_button].toHsv();
+    int brightness = hsv.value();
+    if (lightTheme)
+    {
+      brightness += 15;
+    }
+    else
+    {
+      brightness += 15;
+      brightness = qMax(brightness, 50);
+    }
+    brightness = qBound(0, brightness, 255);
+    hsv.setHsv(hsv.hue(), hsv.hsvSaturation(), brightness);
+    colors[S_button_highlight_hovered] = hsv;
+  }
+
   colors[S_base] = pal.color(QPalette::Base);
   colors[S_text] = pal.color(QPalette::Text);
   colors[S_windowText] = pal.color(QPalette::WindowText);
@@ -1809,20 +1838,20 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     bool isDown = option->state & State_Sunken;
     bool isOn = option->state & State_On;
     bool isMouseOver = option->state & State_MouseOver && Phantom::toolButtonHoverEffect();
-    bool hasFocus = (option->state & State_HasFocus &&
-                     option->state & State_KeyboardFocusChange);
+    bool hasFocus = (option->state & State_HasFocus && option->state & State_KeyboardFocusChange);
     const qreal rounding = Ph::toolButtonRounding();
-    Swatchy fill = (hasFocus || isOn || isMouseOver) ? S_button : S_window;
+    Swatchy fill = S_window;
+    Swatchy outline = S_window_outline;
     if (isDown) {
       fill = S_button_pressed;
-    } else if (isOn) {
-      // kinda repurposing this, hmm
-      fill = S_scrollbarGutter;
+    } else if (hasFocus || isOn) {
+      fill = isMouseOver ? S_button_highlight_hovered : S_button;
+      outline = S_highlight_outline;
+    } else if (isMouseOver) {
+      fill = S_button_hovered;
     }
-    Swatchy outline = hasFocus ? S_highlight_outline : Phantom::outlineSwatch(option);
-    QRect r = option->rect;
     Ph::PSave save(painter);
-    Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill, true);
+    Ph::paintBorderedRoundRect(painter, option->rect, rounding, swatch, outline, fill, true);
     break;
   }
   case PE_IndicatorDockWidgetResizeHandle: {
@@ -2082,6 +2111,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     bool isFlat = false;
     bool isDown = option->state & State_Sunken;
     bool isOn = option->state & State_On;
+    bool isMouseOver = option->state & State_MouseOver;
     if (auto button = qstyleoption_cast<const QStyleOptionButton*>(option)) {
       isDefault = (button->features & QStyleOptionButton::DefaultButton) &&
                   (button->state & State_Enabled);
@@ -2093,17 +2123,21 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     Q_UNUSED(isEnabled)
     bool hasFocus = (option->state & State_HasFocus &&
                      option->state & State_KeyboardFocusChange);
-    const qreal rounding = Ph::pushButtonRounding();
-    bool highlight = hasFocus || isDefault || isOn;
-    Swatchy fill = highlight ? S_button : S_window;
-    if (isDown) {
+    Swatchy fill = S_window;
+    Swatchy outline = S_window_outline;
+    if (hasFocus || isDefault || isOn) {
+      fill = isMouseOver ? S_button_highlight_hovered : S_button;
+      outline = S_highlight_outline;
+    } else if (isDown) {
       fill = S_button_pressed;
+    } else if (isMouseOver) {
+      fill = S_button_hovered;
     }
     QRect r = option->rect;
-    Ph::PSave save(painter);
+    const qreal rounding = Ph::pushButtonRounding();
     bool leftAngle = option->styleObject->property("left-angle").toBool();
     bool rightAngle = option->styleObject->property("right-angle").toBool();
-    Swatchy outline = highlight ? S_highlight_outline : Phantom::outlineSwatch(option);
+    Ph::PSave save(painter);
     if (leftAngle || rightAngle)
     {
         Ph::paintAngledRect(painter, r, leftAngle, rightAngle, Ph::angledButtonDisplacement(), rounding * 2, swatch, outline, fill, true);
@@ -4442,10 +4476,23 @@ QSize PhantomStyle::sizeFromContents(ContentsType type,
   return newSize;
 }
 
-void PhantomStyle::polish(QApplication* app) { QCommonStyle::polish(app); }
+void PhantomStyle::polish(QApplication* app) {
+  QCommonStyle::polish(app);
+}
 
 void PhantomStyle::polish(QWidget* widget) {
   QCommonStyle::polish(widget);
+
+  if (qobject_cast<QToolButton*>(widget)) {
+    widget->setAttribute(Qt::WA_Hover, true);
+  }
+  else if (qobject_cast<QPushButton*>(widget)) {
+    widget->setAttribute(Qt::WA_Hover, true);
+  }
+  else if (qobject_cast<QComboBox*>(widget)) {
+    widget->setAttribute(Qt::WA_Hover, true);
+  }
+
   // Leaving this code here to debug/remove hover stuff if necessary
 #if 0
   if (false
@@ -4478,7 +4525,9 @@ void PhantomStyle::polish(QWidget* widget) {
 #endif
 }
 
-void PhantomStyle::polish(QPalette& pal) { QCommonStyle::polish(pal); }
+void PhantomStyle::polish(QPalette& pal) {
+  QCommonStyle::polish(pal);
+}
 
 void PhantomStyle::unpolish(QWidget* widget) {
   QCommonStyle::unpolish(widget);
