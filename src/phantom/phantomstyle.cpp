@@ -1847,6 +1847,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     auto checkbox = qstyleoption_cast<const QStyleOptionButton*>(option);
     if (!checkbox)
       break;
+    Ph::PSave save(painter);
     QRect r = option->rect;
     bool isHighlighted = option->state & State_HasFocus &&
                          option->state & State_KeyboardFocusChange;
