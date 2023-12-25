@@ -1289,14 +1289,18 @@ void fillRectEdges(QPainter* p, QRect rect, Qt::Edges edges, int thickness,
   fillRectEdges(p, rect, edges,
                 QMargins(thickness, thickness, thickness, thickness), color);
 }
-Q_ALWAYS_INLINE QRect expandRect(QRect rect, Qt::Edges edges, int delta) {
+
+Q_ALWAYS_INLINE QRect expandRect(QRect rect, Qt::Edges edges, int delta)
+{
   int l = edges & Qt::LeftEdge ? -delta : 0;
   int t = edges & Qt::TopEdge ? -delta : 0;
   int r = edges & Qt::RightEdge ? delta : 0;
   int b = edges & Qt::BottomEdge ? delta : 0;
   return rect.adjusted(l, t, r, b);
 }
-Q_ALWAYS_INLINE Qt::Edge oppositeEdge(Qt::Edge edge) {
+
+Q_ALWAYS_INLINE Qt::Edge oppositeEdge(Qt::Edge edge)
+{
   switch (edge) {
   case Qt::LeftEdge:
     return Qt::RightEdge;
@@ -1309,8 +1313,10 @@ Q_ALWAYS_INLINE Qt::Edge oppositeEdge(Qt::Edge edge) {
   }
   return Qt::TopEdge;
 }
+
 Q_ALWAYS_INLINE QRect rectTranslatedTowardEdge(QRect rect, Qt::Edge edge,
-                                               int delta) {
+                                               int delta)
+{
   switch (edge) {
   case Qt::LeftEdge:
     return rect.translated(-delta, 0);
@@ -1323,8 +1329,10 @@ Q_ALWAYS_INLINE QRect rectTranslatedTowardEdge(QRect rect, Qt::Edge edge,
   }
   return rect;
 }
+
 Q_NEVER_INLINE QRect rectFromInnerEdgeWithThickness(QRect rect, Qt::Edge edge,
-                                                    int thickness) {
+                                                    int thickness)
+{
   int x, y, w, h;
   rect.getRect(&x, &y, &w, &h);
   QRect r;
@@ -1344,22 +1352,16 @@ Q_NEVER_INLINE QRect rectFromInnerEdgeWithThickness(QRect rect, Qt::Edge edge,
   }
   return r & rect;
 }
+
 Q_NEVER_INLINE void paintSolidRoundRect(QPainter* p, QRect rect, qreal radius,
-                                        const PhSwatch& swatch, Swatchy fill) {
+                                        const PhSwatch& swatch, Swatchy fill)
+{
   if (!fill)
     return;
-  bool aa = p->testRenderHint(QPainter::Antialiasing);
-  if (radius > 0.5) {
-    if (!aa)
-      p->setRenderHint(QPainter::Antialiasing);
-    p->setPen(swatch.pen(SwatchColors::S_none));
-    p->setBrush(swatch.brush(fill));
-    p->drawRoundedRect(rect, radius, radius);
-  } else {
-    if (aa)
-      p->setRenderHint(QPainter::Antialiasing, false);
-    p->fillRect(rect, swatch.color(fill));
-  }
+
+  p->setPen(swatch.pen(SwatchColors::S_none));
+  p->setBrush(swatch.brush(fill));
+  p->drawRoundedRect(rect, radius, radius);
 }
 
 Q_NEVER_INLINE void paintBorderedRoundRect(QPainter* p, QRect rect,
@@ -1367,29 +1369,14 @@ Q_NEVER_INLINE void paintBorderedRoundRect(QPainter* p, QRect rect,
                                            Swatchy stroke, Swatchy fill,
                                            bool enableGradient = false)
 {
-  if (rect.width() < 1 || rect.height() < 1)
-    return;
   if (!stroke && !fill)
     return;
-  bool aa = p->testRenderHint(QPainter::Antialiasing);
-  if (radius > 0.5) {
-    if (!aa)
-      p->setRenderHint(QPainter::Antialiasing);
-    p->setPen(swatch.pen(stroke));
-    p->setBrush(buttonBrush(swatch, fill, enableGradient));
-    QRectF rf((qreal)rect.x() + 0.5, (qreal)rect.y() + 0.5,
-              (qreal)rect.width() - 1.0, (qreal)rect.height() - 1.0);
-    p->drawRoundedRect(rf, radius, radius);
-  } else {
-    if (aa)
-      p->setRenderHint(QPainter::Antialiasing, false);
-    if (stroke) {
-      fillRectOutline(p, rect, 1, swatch.color(stroke));
-    }
-    if (fill) {
-      p->fillRect(rect.adjusted(1, 1, -1, -1), buttonBrush(swatch, fill, enableGradient));
-    }
-  }
+
+  p->setPen(swatch.pen(stroke));
+  p->setBrush(buttonBrush(swatch, fill, enableGradient));
+  QRectF rf((qreal)rect.x() + 0.5, (qreal)rect.y() + 0.5,
+            (qreal)rect.width() - 1.0, (qreal)rect.height() - 1.0);
+  p->drawRoundedRect(rf, radius, radius);
 }
 
 Q_NEVER_INLINE void paintAngledRect(QPainter* p, QRect rect, bool leftAngle, bool rightAngle,
