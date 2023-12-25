@@ -51,10 +51,6 @@ public:
                const QPalette& pal, bool enabled, const QString& text,
                QPalette::ColorRole textRole = QPalette::NoRole) const override;
   void polish(QWidget* widget) override;
-  void polish(QApplication* app) override;
-  void polish(QPalette& pal) override;
-  void unpolish(QWidget* widget) override;
-  void unpolish(QApplication* app) override;
 
 protected:
   PhantomStylePrivate* d;

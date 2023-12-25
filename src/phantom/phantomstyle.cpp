@@ -135,7 +135,7 @@ static const qreal GroupBox_Rounding = 0.0;
 static const qreal SliderGroove_Rounding = 2.0;
 static const qreal SliderHandle_Rounding = 0.0;
 static const qreal ScrollBar_SliderMinFontRatio = 2.0;
-static const qreal ScrollBar_ExtentFontRatio = 0.75;
+static const qreal ScrollBar_ExtentFontRatio = 0.6;
 
 static const qreal CheckMark_WidthOfHeightScale = 0.8;
 static const qreal PushButton_HorizontalPaddingFontHeightRatio = 1.0 / 2.0;
@@ -3675,70 +3675,25 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
     auto scrollBar = qstyleoption_cast<const QStyleOptionSlider*>(option);
     if (!scrollBar)
       break;
-    bool isHorizontal = scrollBar->orientation == Qt::Horizontal;
-    bool isLeftToRight = option->direction != Qt::RightToLeft;
-    bool isSunken = scrollBar->state & State_Sunken;
-    QRect scrollBarSlider =
-        proxy()->subControlRect(control, scrollBar, SC_ScrollBarSlider, widget);
-    QRect scrollBarGroove =
-        proxy()->subControlRect(control, scrollBar, SC_ScrollBarGroove, widget);
-
-    bool scrollBarGrooveShown = scrollBar->subControls & SC_ScrollBarGroove;
-    bool isEnabled = scrollBar->state & State_Enabled;
-    bool hasRange = scrollBar->minimum != scrollBar->maximum;
-
-    // Groove/gutter/trench area
-    if (scrollBarGrooveShown) {
-      QRect r = scrollBarGroove;
-      Qt::Edges edges;
-      if (isHorizontal) {
-        edges = Qt::TopEdge;
-        r.setY(r.y() + 1);
-      } else {
-        if (isLeftToRight) {
-          edges = Qt::LeftEdge;
-          r.setX(r.x() + 1);
-        } else {
-          edges = Qt::RightEdge;
-          r.setWidth(r.width() - 1);
-        }
-      }
-      Swatchy grooveColor =
-          isEnabled ? S_scrollbarGutter : S_scrollbarGutter_disabled;
-      Swatchy outlineColor = Phantom::outlineSwatch(option);
-      // Top or left dark edge
-      Ph::fillRectEdges(painter, scrollBarGroove, edges, 1,
-                        swatch.color(outlineColor));
-
-      // General BG fill
-      painter->fillRect(r, swatch.color(grooveColor));
-    }
+    QRect rect = proxy()->subControlRect(control, scrollBar, SC_ScrollBarSlider, widget);
+    // TODO: improve the disabled state colors
+    //bool isEnabled = scrollBar->state & State_Enabled;
+    //bool hasRange = scrollBar->minimum != scrollBar->maximum;
 
     // Slider thumb
     if (scrollBar->subControls & SC_ScrollBarSlider) {
-      Swatchy thumbFill;
-      if (isSunken && scrollBar->activeSubControls & SC_ScrollBarSlider) {
+      Swatchy thumbFill = Ph::outlineSwatch(option);
+      // TODO: implement hover or pressed color
+      /*if (isSunken && scrollBar->activeSubControls & SC_ScrollBarSlider) {
         thumbFill = S_button_pressed;
       } else if (hasRange) {
         thumbFill = S_button;
       } else {
         thumbFill = S_window;
-      }
-      QRect mainRect = scrollBarSlider;
-      mainRect.adjust(2, 2, -2, -2);
-      qreal radius;
-      if (isHorizontal) {
-          radius = mainRect.height() / 2.0;
-        mainRect.setY(mainRect.y() + 1);
-      } else {
-          radius = mainRect.width() / 2.0;
-        if (isLeftToRight) {
-          mainRect.setX(mainRect.x() + 1);
-        } else {
-          mainRect.setWidth(mainRect.width() - 1);
-        }
-      }
-      Ph::paintBorderedRoundRect(painter, mainRect, radius, swatch, Ph::outlineSwatch(option), thumbFill);
+      }*/
+      QRect r = rect.adjusted(1, 1, -1, -1);
+      qreal radius = qMin(r.width(), r.height()) / 2.0;
+      Ph::paintSolidRoundRect(painter, r, radius, swatch, thumbFill);
     }
     break;
   }
@@ -4442,78 +4397,12 @@ QSize PhantomStyle::sizeFromContents(ContentsType type,
   return newSize;
 }
 
-void PhantomStyle::polish(QApplication* app) { QCommonStyle::polish(app); }
-
 void PhantomStyle::polish(QWidget* widget) {
-  QCommonStyle::polish(widget);
-  // Leaving this code here to debug/remove hover stuff if necessary
-#if 0
-  if (false
-#if QT_CONFIG(abstractbutton)
-      || qobject_cast<QAbstractButton*>(widget)
-#endif
-#if QT_CONFIG(combobox)
-      || qobject_cast<QComboBox*>(widget)
-#endif
-#if QT_CONFIG(progressbar)
-      || qobject_cast<QProgressBar*>(widget)
-#endif
-#if QT_CONFIG(scrollbar)
-      || qobject_cast<QScrollBar*>(widget)
-#endif
-#if QT_CONFIG(splitter)
-      || qobject_cast<QSplitterHandle*>(widget)
-#endif
-#if QT_CONFIG(abstractslider)
-      || qobject_cast<QAbstractSlider*>(widget)
-#endif
-#if QT_CONFIG(spinbox)
-      || qobject_cast<QAbstractSpinBox*>(widget)
-#endif
-      || (widget->inherits("QDockSeparator")) ||
-      (widget->inherits("QDockWidgetSeparator"))) {
-    widget->setAttribute(Qt::WA_Hover, true);
+  if (qobject_cast<QScrollBar*>(widget)) {
     widget->setAttribute(Qt::WA_OpaquePaintEvent, false);
   }
-#endif
+  QCommonStyle::polish(widget);
 }
-
-void PhantomStyle::polish(QPalette& pal) { QCommonStyle::polish(pal); }
-
-void PhantomStyle::unpolish(QWidget* widget) {
-  QCommonStyle::unpolish(widget);
-  // Leaving this code here to debug/remove hover stuff if necessary
-#if 0
-  if (false
-#if QT_CONFIG(abstractbutton)
-      || qobject_cast<QAbstractButton*>(widget)
-#endif
-#if QT_CONFIG(combobox)
-      || qobject_cast<QComboBox*>(widget)
-#endif
-#if QT_CONFIG(progressbar)
-      || qobject_cast<QProgressBar*>(widget)
-#endif
-#if QT_CONFIG(scrollbar)
-      || qobject_cast<QScrollBar*>(widget)
-#endif
-#if QT_CONFIG(splitter)
-      || qobject_cast<QSplitterHandle*>(widget)
-#endif
-#if QT_CONFIG(abstractslider)
-      || qobject_cast<QAbstractSlider*>(widget)
-#endif
-#if QT_CONFIG(spinbox)
-      || qobject_cast<QAbstractSpinBox*>(widget)
-#endif
-      || (widget->inherits("QDockSeparator")) ||
-      (widget->inherits("QDockWidgetSeparator"))) {
-    widget->setAttribute(Qt::WA_Hover, false);
-  }
-#endif
-}
-
-void PhantomStyle::unpolish(QApplication* app) { QCommonStyle::unpolish(app); }
 
 QRect PhantomStyle::subControlRect(ComplexControl control,
                                    const QStyleOptionComplex* option,
