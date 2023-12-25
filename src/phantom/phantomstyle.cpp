@@ -1631,30 +1631,6 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
 #endif
 #if QT_CONFIG(tabbar)
   case PE_FrameTabBarBase: {
-    auto tbb = qstyleoption_cast<const QStyleOptionTabBarBase*>(option);
-    if (!tbb)
-      break;
-    Qt::Edge edge = Qt::TopEdge;
-    switch (tbb->shape) {
-    case QTabBar::RoundedNorth:
-    case QTabBar::TriangularNorth:
-      edge = Qt::TopEdge;
-      break;
-    case QTabBar::RoundedSouth:
-    case QTabBar::TriangularSouth:
-      edge = Qt::BottomEdge;
-      break;
-    case QTabBar::RoundedWest:
-    case QTabBar::TriangularWest:
-      edge = Qt::LeftEdge;
-      break;
-    case QTabBar::RoundedEast:
-    case QTabBar::TriangularEast:
-      edge = Qt::RightEdge;
-      break;
-    }
-    auto outlineColor = swatch.color(Phantom::outlineSwatch(option));
-    Ph::fillRectEdges(painter, option->rect, edge, 1, outlineColor);
     break;
   }
 #endif // QT_CONFIG(tabbar)
@@ -3044,89 +3020,45 @@ void PhantomStyle::drawControl(ControlElement element,
     break;
   }
 #if QT_CONFIG(tabbar)
-  case CE_TabBarTabShape: {
-    auto tab = qstyleoption_cast<const QStyleOptionTab*>(option);
-    if (!tab)
+  case CE_TabBarTabShape:
+  {
+    auto tabopt = qstyleoption_cast<const QStyleOptionTab*>(option);
+    if (!tabopt)
       break;
-    bool rtlHorTabs = (tab->direction == Qt::RightToLeft &&
-                       (tab->shape == QTabBar::RoundedNorth ||
-                        tab->shape == QTabBar::RoundedSouth));
-    bool isSelected = tab->state & State_Selected;
-    bool lastTab =
-        ((!rtlHorTabs && tab->position == QStyleOptionTab::End) ||
-         (rtlHorTabs && tab->position == QStyleOptionTab::Beginning));
-    bool onlyOne = tab->position == QStyleOptionTab::OnlyOneTab;
-    int tabOverlap = pixelMetric(PM_TabBarTabOverlap, option, widget);
-    const qreal rounding = Ph::TabBarTab_Rounding;
-    Qt::Edge outerEdge = Qt::TopEdge;
-    Qt::Edge edgeTowardNextTab = Qt::RightEdge;
-    switch (tab->shape) {
-    case QTabBar::RoundedNorth:
-      outerEdge = Qt::TopEdge;
-      edgeTowardNextTab = Qt::RightEdge;
-      break;
-    case QTabBar::RoundedSouth:
-      outerEdge = Qt::BottomEdge;
-      edgeTowardNextTab = Qt::RightEdge;
-      break;
-    case QTabBar::RoundedWest:
-      outerEdge = Qt::LeftEdge;
-      edgeTowardNextTab = Qt::BottomEdge;
-      break;
-    case QTabBar::RoundedEast:
-      outerEdge = Qt::RightEdge;
-      edgeTowardNextTab = Qt::BottomEdge;
-      break;
-    default:
-      QCommonStyle::drawControl(element, tab, painter, widget);
-      return;
-    }
-    Qt::Edge innerEdge = Ph::oppositeEdge(outerEdge);
-    Qt::Edge edgeAwayNextTab = Ph::oppositeEdge(edgeTowardNextTab);
-    QRect shapeClipRect = Ph::expandRect(option->rect, innerEdge, -2);
-    QRect drawRect =
-        Ph::expandRect(shapeClipRect, innerEdge, 3 + 2 * (int)rounding + 1);
-    if (!onlyOne && !lastTab) {
-      drawRect = Ph::expandRect(drawRect, edgeTowardNextTab, tabOverlap);
-      shapeClipRect =
-          Ph::expandRect(shapeClipRect, edgeTowardNextTab, tabOverlap);
-    }
-    if (!isSelected) {
-      int offset =
-          proxy()->pixelMetric(PM_TabBarTabShiftVertical, option, widget);
-      drawRect = Ph::expandRect(drawRect, outerEdge, -offset);
-    }
-    painter->save();
-    painter->setClipRect(shapeClipRect);
-    bool hasFrame =
-        tab->features & QStyleOptionTab::HasFrame && !tab->documentMode;
-    Swatchy tabFrameColor, thisFillColor;
-    if (hasFrame) {
-      tabFrameColor = S_tabFrame;
-      if (isSelected) {
-        thisFillColor = S_tabFrame;
-      } else {
-        thisFillColor = S_inactiveTabYesFrame;
+
+    bool selected = tabopt->state & State_Selected;
+    if(selected)
+    {
+      QRect rect = tabopt->rect;
+
+      switch( tabopt->shape )
+      {
+      case QTabBar::TriangularNorth:
+        Q_FALLTHROUGH();
+      case QTabBar::RoundedNorth:
+        rect.setHeight(4);
+        rect.moveBottom( option->rect.bottom() );
+        break;
+      case QTabBar::TriangularSouth:
+        Q_FALLTHROUGH();
+      case QTabBar::RoundedSouth:
+        rect.setHeight(4);
+        break;
+      case QTabBar::TriangularWest:
+        Q_FALLTHROUGH();
+      case QTabBar::RoundedWest:
+        rect.setWidth(4);
+        rect.moveRight( option->rect.right() );
+        break;
+      case QTabBar::TriangularEast:
+        Q_FALLTHROUGH();
+      case QTabBar::RoundedEast:
+        rect.setWidth(4);
+        break;
       }
-    } else {
-      tabFrameColor = S_window;
-      if (isSelected) {
-        thisFillColor = S_window;
-      } else {
-        thisFillColor = S_inactiveTabNoFrame;
-      }
-    }
-    auto outlineSwatch = Phantom::outlineSwatch(option);
-    Ph::paintBorderedRoundRect(painter, drawRect, rounding, swatch,
-                               outlineSwatch, thisFillColor);
-    painter->restore();
-    if (isSelected) {
-      QRect refillRect =
-          Ph::rectFromInnerEdgeWithThickness(shapeClipRect, innerEdge, 2);
-      refillRect = Ph::rectTranslatedTowardEdge(refillRect, innerEdge, 2);
-      refillRect =
-          Ph::expandRect(refillRect, edgeAwayNextTab | edgeTowardNextTab, -1);
-      painter->fillRect(refillRect, swatch.color(tabFrameColor));
+
+      QColor color = tabopt->palette.highlight().color();
+      painter->fillRect(rect, color);
     }
     break;
   }
@@ -4049,7 +3981,7 @@ int PhantomStyle::pixelMetric(PixelMetric metric, const QStyleOption* option,
     val = 1;
     break;
   case PM_TabBarBaseOverlap:
-    val = 2;
+    val = 0;
     break;
   case PM_TabBarIconSize: {
     if (!widget)
