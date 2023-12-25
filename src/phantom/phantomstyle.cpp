@@ -129,7 +129,8 @@ static const qreal LineEdit_Rounding = 0.0;
 static const qreal AngledButton_Displacement = 5.0;
 static const qreal FrameFocusRect_Rounding = 1.0;
 static const qreal PushButton_Rounding = 2.0;
-static const qreal ToolButton_Rounding = 1.25;
+static const qreal ToolButton_Rounding = 2.0;
+static const qreal CheckBox_Rounding = 2.0;
 static const qreal ProgressBar_Rounding = 2.0;
 static const qreal GroupBox_Rounding = 0.0;
 static const qreal SliderGroove_Rounding = 2.0;
@@ -186,6 +187,12 @@ static qreal lineEditRounding()
 {
   QVariant val = tweakValue(qApp, Tweak::button_rounding);
   return val.isValid() ? val.toReal() : LineEdit_Rounding;
+}
+
+static qreal checkBoxRounding()
+{
+  QVariant val = tweakValue(qApp, Tweak::button_rounding);
+  return val.isValid() ? val.toReal() / 2.0 : CheckBox_Rounding;
 }
 
 static qreal angledButtonDisplacement()
@@ -1237,8 +1244,8 @@ Q_NEVER_INLINE void drawMdiButton(QPainter* painter,
                     tmp.bottom() - 2);
 }
 
-Q_NEVER_INLINE void fillRectOutline(QPainter* p, QRect rect, QMargins margins,
-                                    const QColor& brush) {
+Q_NEVER_INLINE void fillRectOutline(QPainter* p, QRect rect, QMargins margins, const QColor& brush)
+{
   int x, y, w, h;
   rect.getRect(&x, &y, &w, &h);
   int ml = margins.left();
@@ -1254,11 +1261,12 @@ Q_NEVER_INLINE void fillRectOutline(QPainter* p, QRect rect, QMargins margins,
   p->fillRect(r2 & rect, brush);
   p->fillRect(r3 & rect, brush);
 }
-void fillRectOutline(QPainter* p, QRect rect, int thickness,
-                     const QColor& color) {
-  fillRectOutline(p, rect, QMargins(thickness, thickness, thickness, thickness),
-                  color);
+
+void fillRectOutline(QPainter* p, QRect rect, int thickness, const QColor& color)
+{
+  fillRectOutline(p, rect, QMargins(thickness, thickness, thickness, thickness), color);
 }
+
 Q_NEVER_INLINE void fillRectEdges(QPainter* p, QRect rect, Qt::Edges edges,
                                   QMargins margins, const QColor& color) {
   int x, y, w, h;
@@ -1875,17 +1883,16 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     if (isPressed && !isFlat) {
       fgColor = S_highlightedText;
     }
-    // Bare checkmarks that are selected should draw with the highlighted text
-    // color.
+    // Bare checkmarks that are selected should draw with the highlighted text color.
     if (isSelected && isFlat) {
       fgColor = S_highlightedText;
     }
+
     if (!isFlat) {
-      QRect fillR = r;
-      Ph::fillRectOutline(painter, fillR, 1, swatch.color(outlineColor));
-      fillR.adjust(1, 1, -1, -1);
-      painter->fillRect(fillR, swatch.color(bgFillColor));
+      qreal radius = Ph::checkBoxRounding();
+      Ph::paintBorderedRoundRect(painter, r, radius, swatch, outlineColor, bgFillColor);
     }
+
     if (checkbox->state & State_NoChange) {
       const qreal insetScale = 0.7;
       qreal rx, ry, rw, rh;
