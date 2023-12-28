@@ -424,15 +424,15 @@ Q_NEVER_INLINE void PhSwatch::loadFromQPalette(const QPalette& pal) {
     int brightness;
     if (lightTheme)
     {
-      brightness = windowBrightness - 35;
-      brightness = qMin(brightness, buttonBrightness - 15);
+      brightness = windowBrightness - 55;
+      brightness = qMin(brightness, buttonBrightness - 25);
       brightness = qMin(brightness, 255 - 45);
     }
     else
     {
-      brightness = windowBrightness + 35;
-      brightness = qMax(brightness, buttonBrightness + 15);
-      brightness = qMax(brightness, 45);
+      brightness = windowBrightness + 45;
+      brightness = qMax(brightness, buttonBrightness + 25);
+      brightness = qMax(brightness, 55);
     }
     QColor hsv = colors[S_window].toHsv();
     int hue = hsv.hue();
