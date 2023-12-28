@@ -1367,6 +1367,7 @@ Q_NEVER_INLINE void paintSolidRoundRect(QPainter* p, QRect rect, qreal radius,
   if (!fill)
     return;
 
+  p->setRenderHint(QPainter::Antialiasing);
   p->setPen(swatch.pen(SwatchColors::S_none));
   p->setBrush(swatch.brush(fill));
   p->drawRoundedRect(rect, radius, radius);
@@ -1380,10 +1381,10 @@ Q_NEVER_INLINE void paintBorderedRoundRect(QPainter* p, QRect rect,
   if (!stroke && !fill)
     return;
 
+  p->setRenderHint(QPainter::Antialiasing);
   p->setPen(swatch.pen(stroke));
   p->setBrush(buttonBrush(swatch, fill, enableGradient));
-  QRectF rf((qreal)rect.x() + 0.5, (qreal)rect.y() + 0.5,
-            (qreal)rect.width() - 1.0, (qreal)rect.height() - 1.0);
+  QRectF rf(rect.x() + 0.5, rect.y() + 0.5, rect.width() - 1.0, rect.height() - 1.0);
   p->drawRoundedRect(rf, radius, radius);
 }
 
