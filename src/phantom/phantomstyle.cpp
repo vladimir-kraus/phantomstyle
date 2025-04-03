@@ -1413,9 +1413,8 @@ Q_NEVER_INLINE void paintAngledRect(QPainter* p, QRect rect, bool leftAngle, boo
   path.lineTo(x + w - rightDisplacement, y + h);
   if (leftDisplacement == 0.0)
   {
-      path.lineTo(x + radius, y + h);
+      // Note: missing line segments are automatically added by arcTo()
       path.arcTo(x, y + h - radius, radius, radius, 270.0, -90.0);
-      path.lineTo(x, y + radius);
       path.arcTo(x, y, radius, radius, 180.0, -90.0);
   }
   else
