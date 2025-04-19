@@ -1780,11 +1780,12 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     bool isDown = option->state & State_Sunken;
     bool isOn = option->state & State_On;
     bool isAutoRaise = option->state & State_AutoRaise;
+    bool isEnabled = option->state & State_Enabled;
     bool isMouseOver = option->state & State_MouseOver && Phantom::toolButtonHoverEffect();
     bool hasFocus = (option->state & State_HasFocus &&
                      option->state & State_KeyboardFocusChange);
     const qreal rounding = Ph::toolButtonRounding();
-    Swatchy fill = (hasFocus || isOn || isMouseOver) ? S_button : S_window;
+    Swatchy fill = (hasFocus || isOn || (isMouseOver && isEnabled)) ? S_button : S_window;
     if (isDown) {
       fill = S_button_pressed;
     } else if (isOn) {
