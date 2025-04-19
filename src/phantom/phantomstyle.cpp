@@ -1779,6 +1779,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
   case PE_PanelButtonTool: {
     bool isDown = option->state & State_Sunken;
     bool isOn = option->state & State_On;
+    bool isAutoRaise = option->state & State_AutoRaise;
     bool isMouseOver = option->state & State_MouseOver && Phantom::toolButtonHoverEffect();
     bool hasFocus = (option->state & State_HasFocus &&
                      option->state & State_KeyboardFocusChange);
@@ -1790,7 +1791,14 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
       // kinda repurposing this, hmm
       fill = S_scrollbarGutter;
     }
-    Swatchy outline = hasFocus ? S_highlight_outline : Phantom::outlineSwatch(option);
+    Swatchy outline;
+    if (hasFocus) {
+      outline = S_highlight_outline;
+    } else if (isAutoRaise) {
+      outline = S_none;
+    } else {
+      outline = Phantom::outlineSwatch(option);
+    }
     QRect r = option->rect;
     Ph::PSave save(painter);
     Ph::paintBorderedRoundRect(painter, r, rounding, swatch, outline, fill, true);
