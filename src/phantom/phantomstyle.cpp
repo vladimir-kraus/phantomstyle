@@ -405,7 +405,7 @@ Q_NEVER_INLINE void PhSwatch::loadFromQPalette(const QPalette& pal) {
   const bool lightTheme = pal.color(QPalette::Window).lightness() > pal.color(QPalette::WindowText).lightness();
   const bool isEnabled = pal.currentColorGroup() != QPalette::Disabled;
   int windowBrightness = pal.color(QPalette::Window).value();
-  int buttonBrightness = pal.color(QPalette::Window).value();
+  int buttonBrightness = pal.color(QPalette::Button).value();
   QColor colors[Num_SwatchColors];
   colors[S_none] = QColor();
 
