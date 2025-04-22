@@ -373,6 +373,7 @@ struct PhSwatch : public QSharedData {
   // QPen -> QBrush) every time we want to get a QColor.
   QBrush brushes[Num_SwatchColors];
   QPen pens[Num_SwatchColors];
+  bool lightTheme = false;
 
   // Note: the casts to int in the assert macros are to suppress a false
   // positive warning for tautological comparison in the clang linter.
@@ -402,7 +403,7 @@ using PhSwatchCache = QVarLengthArray<PhCacheEntry, Num_ColorCacheEntries>;
 Q_NEVER_INLINE void PhSwatch::loadFromQPalette(const QPalette& pal) {
   using namespace SwatchColors;
   namespace Dc = DeriveColors;
-  const bool lightTheme = pal.color(QPalette::Window).lightness() > pal.color(QPalette::WindowText).lightness();
+  lightTheme = pal.color(QPalette::Window).lightness() > pal.color(QPalette::WindowText).lightness();
   const bool isEnabled = pal.currentColorGroup() != QPalette::Disabled;
   int windowBrightness = pal.color(QPalette::Window).value();
   int buttonBrightness = pal.color(QPalette::Button).value();
@@ -1795,7 +1796,7 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     Swatchy outline;
     if (hasFocus) {
       outline = S_highlight_outline;
-    } else if (isAutoRaise) {
+    } else if (isAutoRaise && !swatch.lightTheme) {
       outline = S_none;
     } else {
       outline = Phantom::outlineSwatch(option);
