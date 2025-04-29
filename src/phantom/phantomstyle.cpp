@@ -1401,22 +1401,29 @@ Q_NEVER_INLINE void paintAngledRect(QPainter* p, QRect rect, bool leftAngle, boo
 
   p->setRenderHint(QPainter::Antialiasing);
   QPainterPath path;
-  qreal x = (qreal)rect.x() + 0.5;
-  qreal y = (qreal)rect.y() + 0.5;
-  qreal w = (qreal)rect.width() - 1.0;
-  qreal h = (qreal)rect.height() - 1.0;
-  qreal leftDisplacement = displacement * (int)leftAngle;
-  qreal rightDisplacement = displacement * (int)rightAngle;
-
+  qreal x = rect.x() + 0.5;
+  qreal y = rect.y() + 0.5;
+  qreal w = rect.width() - 1.0;
+  qreal h = rect.height() - 1.0;
+  qreal leftDisplacement = displacement * (leftAngle ? 1 : 0);
+  qreal rightDisplacement = displacement * (rightAngle ? 1 : 0);
   path.moveTo(x + w - rightDisplacement, y);
   path.lineTo(x + w, y + h / 2.0 - 1.0);
   path.lineTo(x + w, y + h / 2.0 + 1.0);
   path.lineTo(x + w - rightDisplacement, y + h);
   if (leftDisplacement == 0.0)
   {
+    if (radius > 0.0)
+    {
       // Note: missing line segments are automatically added by arcTo()
       path.arcTo(x, y + h - radius, radius, radius, 270.0, -90.0);
       path.arcTo(x, y, radius, radius, 180.0, -90.0);
+    }
+    else
+    {
+      path.lineTo(x, y + h);
+      path.lineTo(x, y);
+    }
   }
   else
   {
