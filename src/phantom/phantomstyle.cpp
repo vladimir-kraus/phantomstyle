@@ -134,7 +134,7 @@ static const qreal CheckBox_Rounding = 2.0;
 static const qreal ProgressBar_Rounding = 2.0;
 static const qreal GroupBox_Rounding = 0.0;
 static const qreal SliderGroove_Rounding = 2.0;
-static const qreal SliderHandle_Rounding = 0.0;
+static const qreal SliderHandle_Rounding = 2.0;
 static const qreal ScrollBar_SliderMinFontRatio = 2.0;
 static const qreal ScrollBar_ExtentFontRatio = 0.5;
 
@@ -193,6 +193,12 @@ static qreal checkBoxRounding()
 {
   QVariant val = tweakValue(qApp, Tweak::button_rounding);
   return val.isValid() ? val.toReal() / 2.0 : CheckBox_Rounding;
+}
+
+static qreal scrollBarHandleRounding()
+{
+  QVariant val = tweakValue(qApp, Tweak::button_rounding);
+  return val.isValid() ? qMax(0.0, val.toReal() - 2.0) : SliderHandle_Rounding;
 }
 
 static qreal angledButtonDisplacement()
@@ -3636,6 +3642,7 @@ void PhantomStyle::drawComplexControl(ComplexControl control,
       }*/
       QRect r = rect.adjusted(1, 1, -1, -1);
       qreal radius = qMin(r.width(), r.height()) / 2.0;
+      radius = qMin(radius, Ph::scrollBarHandleRounding());
       Ph::paintSolidRoundRect(painter, r, radius, swatch, thumbFill);
     }
     break;
