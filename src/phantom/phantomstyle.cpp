@@ -1793,17 +1793,16 @@ void PhantomStyle::drawPrimitive(PrimitiveElement elem,
     bool hasFocus = (option->state & State_HasFocus &&
                      option->state & State_KeyboardFocusChange);
     const qreal rounding = Ph::toolButtonRounding();
-    Swatchy fill = (hasFocus || isOn || (isMouseOver && isEnabled)) ? S_button : S_window;
-    if (isDown) {
+    Swatchy fill = S_window;
+    if (hasFocus || isOn || (isMouseOver && isEnabled)) {
+      fill = S_button;
+    } else if (isDown) {
       fill = S_button_pressed;
-    } else if (isOn) {
-      // kinda repurposing this, hmm
-      fill = S_scrollbarGutter;
     }
     Swatchy outline;
     if (hasFocus) {
       outline = S_highlight_outline;
-    } else if (isAutoRaise && !swatch.lightTheme) {
+    } else if (isAutoRaise && !isOn && !swatch.lightTheme) {
       outline = S_none;
     } else {
       outline = Phantom::outlineSwatch(option);
