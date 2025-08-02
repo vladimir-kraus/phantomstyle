@@ -2716,18 +2716,17 @@ void PhantomStyle::drawControl(ControlElement element,
     if (!isSelected && maybeHasAltKeyNavFocus && widget) {
       isSelected = widget->hasFocus();
     }
-    Swatchy fill = isSelected ? S_highlight : S_window;
-    painter->fillRect(r, swatch.color(fill));
+    const QColor &fillColor = widget->palette().color(isSelected ? QPalette::Highlight : QPalette::Window);
+    painter->fillRect(r, fillColor);
     QPalette::ColorRole textRole =
         isSelected ? QPalette::HighlightedText : QPalette::Text;
     proxy()->drawItemText(painter, textRect, alignment, mbi->palette,
                           mbi->state & State_Enabled, mbi->text, textRole);
     if (isSelected)
       break;
-    if (Phantom::hasTweak(widget, Phantom::Tweak::menubar_no_ruler))
-      break;
-    if (!isSelected) {
-      Ph::fillRectEdges(painter, r, Qt::BottomEdge, 1, swatch.color(Phantom::outlineSwatch(option)));
+    if (!Phantom::hasTweak(widget, Phantom::Tweak::menubar_no_ruler) && !isSelected) {
+      int lineWidth = 1;
+      Ph::fillRectEdges(painter, r, Qt::BottomEdge, lineWidth, swatch.color(Phantom::outlineSwatch(option)));
     }
     break;
   }
@@ -3035,11 +3034,13 @@ void PhantomStyle::drawControl(ControlElement element,
     break;
   }
   case CE_MenuBarEmptyArea: {
-    if (Phantom::hasTweak(widget, Phantom::Tweak::menubar_no_ruler))
-      break;
     QRect rect = option->rect;
-    Ph::fillRectEdges(painter, rect, Qt::BottomEdge, 1, swatch.color(Phantom::outlineSwatch(option)));
-    painter->fillRect(rect.adjusted(0, 0, 0, -1), swatch.color(S_window));
+    int lineWidth = 0;
+    if (!Phantom::hasTweak(widget, Phantom::Tweak::menubar_no_ruler)) {
+      lineWidth = 1;
+      Ph::fillRectEdges(painter, rect, Qt::BottomEdge, lineWidth, swatch.color(Phantom::outlineSwatch(option)));
+    }
+    painter->fillRect(rect.adjusted(0, 0, 0, -lineWidth), widget->palette().color(QPalette::Window));
     break;
   }
 #if QT_CONFIG(tabbar)
