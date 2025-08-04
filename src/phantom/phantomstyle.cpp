@@ -2292,7 +2292,7 @@ void PhantomStyle::drawControl(ControlElement element,
       size = QSize(length, thickness);
     }
     QRect filledRect = QStyle::alignedRect(option->direction, Qt::AlignCenter, size, r);
-    painter->fillRect(filledRect.adjusted(-1, 0, 1, 0), swatch.color(S_button));
+    painter->fillRect(filledRect.adjusted(-1, 0, 1, 0), swatch.color(Phantom::outlineSwatch(option)));
     break;
   }
 #endif // QT_CONFIG(splitter)
